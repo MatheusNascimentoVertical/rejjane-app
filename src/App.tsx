@@ -23,13 +23,19 @@ import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, P
 
 export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
 
+function clean<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as T;
+}
+
 function syncArr<T extends { id: number }>(col: string, prev: T[], next: T[]) {
   const prevMap = new Map(prev.map(x => [x.id, x]));
   const nextMap = new Map(next.map(x => [x.id, x]));
   for (const [id, item] of nextMap) {
     const old = prevMap.get(id);
     if (!old || JSON.stringify(old) !== JSON.stringify(item))
-      setDoc(doc(db, col, String(id)), item);
+      setDoc(doc(db, col, String(id)), clean(item));
   }
   for (const [id] of prevMap)
     if (!nextMap.has(id)) deleteDoc(doc(db, col, String(id)));
@@ -41,7 +47,7 @@ function syncProds(prev: Produto[], next: Produto[]) {
   for (const [id, item] of nextMap) {
     const old = prevMap.get(id);
     if (!old || JSON.stringify(old) !== JSON.stringify(item))
-      setDoc(doc(db, 'produtos', id), item);
+      setDoc(doc(db, 'produtos', id), clean(item));
   }
   for (const [id] of prevMap)
     if (!nextMap.has(id)) deleteDoc(doc(db, 'produtos', id));
@@ -84,7 +90,7 @@ export default function App() {
       let loadedProds: Produto[];
       if (prSnap.empty) {
         loadedProds = PRODS.map(p => ({ ...p } as Produto));
-        loadedProds.forEach(p => setDoc(doc(db, 'produtos', p.id), p));
+        loadedProds.forEach(p => setDoc(doc(db, 'produtos', p.id), clean(p)));
       } else {
         loadedProds = prSnap.docs.map(d => d.data() as Produto);
       }

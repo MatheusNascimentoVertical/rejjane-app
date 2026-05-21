@@ -62,10 +62,10 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
         cat: catFinal,
         icon,
         preco: parseFloat(preco) || 0,
-        precoDe: precoDe ? parseFloat(precoDe) : undefined,
+        ...(precoDe ? { precoDe: parseFloat(precoDe) } : {}),
         descricao: desc,
         estoque: parseInt(estoque) || 0,
-        fotoUrl: finalFotoUrl || undefined,
+        ...(finalFotoUrl ? { fotoUrl: finalFotoUrl } : {}),
         ativo,
         destaque,
       };
