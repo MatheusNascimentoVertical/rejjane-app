@@ -563,6 +563,8 @@ body {
   .btn-primary, .btn-soft { width: 100%; justify-content: center; }
 }
 
+.page-loading { min-height: 200px; }
+
 .bella-loading {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   height: 100dvh; gap: 16px; background: var(--cream);

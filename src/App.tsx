@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { collection, doc, getDocs, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { db, auth } from './lib/firebase';
@@ -10,14 +10,15 @@ import { BackgroundDecor } from './components/BackgroundDecor';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { BottomNav } from './components/BottomNav';
-import { Dashboard } from './pages/Dashboard';
-import { Pedidos } from './pages/Pedidos';
-import { Clientes } from './pages/Clientes';
-import { Catalogo } from './pages/Catalogo';
-import { Caixa } from './pages/Caixa';
-import { Config } from './pages/Config';
 import { Login } from './pages/Login';
 import { ModalRoot } from './modals/ModalRoot';
+
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Pedidos   = lazy(() => import('./pages/Pedidos').then(m => ({ default: m.Pedidos })));
+const Clientes  = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
+const Catalogo  = lazy(() => import('./pages/Catalogo').then(m => ({ default: m.Catalogo })));
+const Caixa     = lazy(() => import('./pages/Caixa').then(m => ({ default: m.Caixa })));
+const Config    = lazy(() => import('./pages/Config').then(m => ({ default: m.Config })));
 import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm, Produto } from './types';
 
 export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
@@ -211,12 +212,14 @@ export default function App() {
       <Sidebar aba={aba} setAba={setAba} atrasados={atrasados} cfg={cfg} />
       <main className="bella-main">
         <Topbar aba={aba} ctx={ctx} />
-        {aba === 'dash'     && <Dashboard ctx={ctx} setAba={setAba} />}
-        {aba === 'pedidos'  && <Pedidos   ctx={ctx} />}
-        {aba === 'clientes' && <Clientes  ctx={ctx} />}
-        {aba === 'catalogo' && <Catalogo  ctx={ctx} />}
-        {aba === 'caixa'    && <Caixa     ctx={ctx} />}
-        {aba === 'config'   && <Config    ctx={ctx} />}
+        <Suspense fallback={<div className="page-loading" />}>
+          {aba === 'dash'     && <Dashboard ctx={ctx} setAba={setAba} />}
+          {aba === 'pedidos'  && <Pedidos   ctx={ctx} />}
+          {aba === 'clientes' && <Clientes  ctx={ctx} />}
+          {aba === 'catalogo' && <Catalogo  ctx={ctx} />}
+          {aba === 'caixa'    && <Caixa     ctx={ctx} />}
+          {aba === 'config'   && <Config    ctx={ctx} />}
+        </Suspense>
       </main>
       <BottomNav aba={aba} setAba={setAba} atrasados={atrasados} />
       <ModalRoot ctx={ctx} />
