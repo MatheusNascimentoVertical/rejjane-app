@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { uploadFoto } from '../lib/cloudinary';
 import { Sheet, Field } from './Sheet';
 import type { AppCtx, Produto } from '../types';
 
@@ -28,6 +27,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState(dados?.fotoUrl ?? '');
   const [saving,   setSaving]   = useState(false);
+  const [erro,     setErro]     = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -43,14 +43,17 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   const salvar = async () => {
     if (!nome.trim()) return;
     setSaving(true);
+    setErro('');
     try {
       const id = dados?.id || `prod_${Date.now()}`;
       let finalFotoUrl = fotoUrl;
 
       if (fotoFile) {
-        const storRef = ref(storage, `produtos/${id}/foto`);
-        await uploadBytes(storRef, fotoFile);
-        finalFotoUrl = await getDownloadURL(storRef);
+        try {
+          finalFotoUrl = await uploadFoto(fotoFile);
+        } catch {
+          setErro('Foto não enviada. Verifique sua conexão ou tente sem foto.');
+        }
       }
 
       const prod: Produto = {
@@ -73,6 +76,9 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
         setProds(ps => [prod, ...ps]);
       }
       onClose();
+    } catch {
+      setErro('Erro ao salvar. Tente novamente.');
+      setSaving(false);
     } finally {
       setSaving(false);
     }
@@ -157,6 +163,12 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
           <span>Ativo</span>
         </div>
       </div>
+
+      {erro && (
+        <div style={{ fontSize: 12, color: '#b85050', background: 'rgba(217,64,64,0.07)', border: '1px solid rgba(217,64,64,0.2)', borderRadius: 10, padding: '8px 12px', marginTop: 12 }}>
+          {erro}
+        </div>
+      )}
 
       <div className="sheet-actions">
         {isEdit && !confirmDel && (
