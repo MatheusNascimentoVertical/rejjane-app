@@ -552,3 +552,10 @@ body {
   .stat-row { grid-template-columns: 1fr 1fr; }
   .btn-primary, .btn-soft { width: 100%; justify-content: center; }
 }
+
+.bella-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100dvh; gap: 16px; background: var(--cream);
+}
+.bella-loading-logo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 20px rgba(201,125,110,.25); }
+.bella-loading p { font-family: var(--font-script); font-size: 1.2rem; color: var(--rose); }

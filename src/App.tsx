@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { CLI0, PED0, FIN0, CFG0, PROX, getProd } from './data/constants';
+import { useState, useEffect } from 'react';
+import { collection, doc, getDocs, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { db } from './lib/firebase';
+import { CFG0, PROX, getProd } from './data/constants';
 import { hoje } from './lib/helpers';
 import { BackgroundDecor } from './components/BackgroundDecor';
 import { Sidebar } from './components/Sidebar';
@@ -17,16 +18,57 @@ import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, P
 
 export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
 
+function syncArr<T extends { id: number }>(col: string, prev: T[], next: T[]) {
+  const prevMap = new Map(prev.map(x => [x.id, x]));
+  const nextMap = new Map(next.map(x => [x.id, x]));
+  for (const [id, item] of nextMap) {
+    const old = prevMap.get(id);
+    if (!old || JSON.stringify(old) !== JSON.stringify(item))
+      setDoc(doc(db, col, String(id)), item);
+  }
+  for (const [id] of prevMap)
+    if (!nextMap.has(id)) deleteDoc(doc(db, col, String(id)));
+}
+
 export default function App() {
   const [aba, setAba] = useState<Aba>('dash');
-  const [peds, setPeds] = useLocalStorage<Pedido[]>('bella_peds', PED0);
-  const [clis, setClis] = useLocalStorage<Cliente[]>('bella_clis', CLI0);
-  const [fin,  setFin]  = useLocalStorage<Lanc[]>('bella_fin', FIN0);
-  const [cfg,  setCfg]  = useLocalStorage<ConfigType>('bella_cfg', CFG0);
+  const [peds, setPedsS] = useState<Pedido[]>([]);
+  const [clis, setClisS] = useState<Cliente[]>([]);
+  const [fin,  setFinS]  = useState<Lanc[]>([]);
+  const [cfg,  setCfgS]  = useState<ConfigType>(CFG0);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [fSt,  setFSt]  = useState('todos');
   const [search, setSearch] = useState('');
   const fechar = () => setModal(null);
+
+  useEffect(() => {
+    Promise.all([
+      getDocs(collection(db, 'pedidos')),
+      getDocs(collection(db, 'clientes')),
+      getDocs(collection(db, 'lancamentos')),
+      getDoc(doc(db, 'config', 'main')),
+    ]).then(([ps, cs, fs, cfgSnap]) => {
+      setPedsS(ps.docs.map(d => d.data() as Pedido));
+      setClisS(cs.docs.map(d => d.data() as Cliente));
+      setFinS(fs.docs.map(d => d.data() as Lanc));
+      if (cfgSnap.exists()) setCfgS(cfgSnap.data() as ConfigType);
+      else setDoc(doc(db, 'config', 'main'), CFG0);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const setPeds = (upd: React.SetStateAction<Pedido[]>) =>
+    setPedsS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('pedidos', prev, next); return next; });
+
+  const setClis = (upd: React.SetStateAction<Cliente[]>) =>
+    setClisS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('clientes', prev, next); return next; });
+
+  const setFin = (upd: React.SetStateAction<Lanc[]>) =>
+    setFinS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('lancamentos', prev, next); return next; });
+
+  const setCfg = (upd: React.SetStateAction<ConfigType>) =>
+    setCfgS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; setDoc(doc(db, 'config', 'main'), next); return next; });
 
   const mes = hoje().slice(0, 7);
   const recMes  = fin.filter(f => f.tipo === 'entrada' && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
@@ -75,11 +117,21 @@ export default function App() {
   };
 
   const ctx: AppCtx = {
-    peds, setPeds, clis, setClis, fin, setFin, cfg, setCfg,
+    peds, setPeds: setPeds as React.Dispatch<React.SetStateAction<Pedido[]>>,
+    clis, setClis: setClis as React.Dispatch<React.SetStateAction<Cliente[]>>,
+    fin,  setFin:  setFin  as React.Dispatch<React.SetStateAction<Lanc[]>>,
+    cfg,  setCfg:  setCfg  as React.Dispatch<React.SetStateAction<ConfigType>>,
     modal, setModal, avancar, salvarPed,
     ativos, atrasados, recMes, despMes,
     fSt, setFSt, search, setSearch, fechar,
   };
+
+  if (loading) return (
+    <div className="bella-loading">
+      <img src="/bella-logo.jpeg" alt="Bella" className="bella-loading-logo" />
+      <p>Carregando…</p>
+    </div>
+  );
 
   return (
     <div className="bella-app">
