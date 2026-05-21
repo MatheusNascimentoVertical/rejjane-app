@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Sheet, Field } from './Sheet';
-import { OPS } from '../data/constants';
 import { hoje } from '../lib/helpers';
 import type { AppCtx } from '../types';
 
 type Props = { dados: { tipo: 'entrada' | 'saida' }; ctx: AppCtx; onClose: () => void };
 
 export function MFin({ dados, ctx, onClose }: Props) {
-  const { setFin } = ctx;
-  const [f, setF] = useState({ tipo: dados.tipo, desc: '', valor: '', data: hoje(), op: 'bella' });
+  const { setFin, cfg } = ctx;
+  const ops = cfg.ops ?? [];
+  const [f, setF] = useState({ tipo: dados.tipo, desc: '', valor: '', data: hoje(), op: ops[0]?.id ?? 'bella' });
 
   const salvar = () => {
     setFin(p => [{ ...f, id: Date.now(), valor: Number(f.valor) }, ...p]);
@@ -30,7 +30,7 @@ export function MFin({ dados, ctx, onClose }: Props) {
       </div>
       <Field label="Operadora">
         <select value={f.op} onChange={e => setF(s => ({ ...s, op: e.target.value }))}>
-          {OPS.map(o => <option key={o.id} value={o.id}>✿ {o.nome}</option>)}
+          {ops.map(o => <option key={o.id} value={o.id}>✿ {o.nome}</option>)}
         </select>
       </Field>
       <div className="sheet-actions">

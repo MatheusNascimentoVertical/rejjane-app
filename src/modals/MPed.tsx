@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { Sheet, Field } from './Sheet';
-import { PRODS, OPS, ST, getProd } from '../data/constants';
+import { PRODS, ST, getProd } from '../data/constants';
 import { hoje, dPlus, fmtR$ } from '../lib/helpers';
 import type { AppCtx, PedidoForm, PedStatus, OpId } from '../types';
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
 export function MPed({ dados, ctx, onClose }: Props) {
-  const { clis, salvarPed } = ctx;
+  const { clis, salvarPed, cfg } = ctx;
+  const ops = cfg.ops ?? [];
+  const prodList = ctx.prods.length > 0 ? ctx.prods : PRODS;
+
   const [f, setF] = useState<PedidoForm>({
     cliId:  dados?.cliId  ?? (clis[0]?.id ?? ''),
-    prodId: dados?.prodId ?? PRODS[0].id,
+    prodId: dados?.prodId ?? prodList[0]?.id ?? '',
     qtd:    dados?.qtd    ?? 1,
-    vUnit:  dados?.vUnit  ?? PRODS[0].preco,
+    vUnit:  dados?.vUnit  ?? (prodList[0]?.preco ?? 0),
     arte:   dados?.arte   ?? '',
-    op:     dados?.op     ?? 'bella',
+    op:     dados?.op     ?? (ops[0]?.id ?? 'bella') as OpId,
     data:   dados?.data   ?? hoje(),
     prazo:  dados?.prazo  ?? dPlus(7),
     sinal:  dados?.sinal  ?? 0,
@@ -41,14 +44,14 @@ export function MPed({ dados, ctx, onClose }: Props) {
         </Field>
         <Field label="Operadora">
           <select value={f.op} onChange={e => upd('op', e.target.value as OpId)}>
-            {OPS.map(o => <option key={o.id} value={o.id}>✿ {o.nome}</option>)}
+            {ops.map(o => <option key={o.id} value={o.id}>✿ {o.nome}</option>)}
           </select>
         </Field>
       </div>
 
       <Field label="Produto">
         <select value={f.prodId} onChange={e => setProd(e.target.value)}>
-          {PRODS.map(p => <option key={p.id} value={p.id}>{p.icon} {p.nome} — {fmtR$(p.preco)}</option>)}
+          {prodList.map(p => <option key={p.id} value={p.id}>{p.icon} {p.nome} — {fmtR$(p.preco)}</option>)}
         </select>
       </Field>
 

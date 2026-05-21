@@ -1,28 +1,47 @@
 import { hoje, dPlus } from '../lib/helpers';
 import type { Cliente, Pedido, Lanc, Config, PedStatus } from '../types';
 
-export type Prod = { id: string; nome: string; preco: number; icon: string; cat: string };
+export type Prod = {
+  id: string;
+  nome: string;
+  preco: number;
+  precoDe?: number;
+  icon: string;
+  cat: string;
+  descricao: string;
+  estoque: number;
+  fotoUrl?: string;
+  ativo: boolean;
+  destaque?: boolean;
+};
+
 export type Op = { id: string; nome: string; cor: string };
 export type StCfg = { label: string; cor: string; bg: string };
 
 export const PRODS: Prod[] = [
-  { id: 'cam_a', nome: 'Camiseta Adulto',     preco: 35,  icon: '👕',    cat: 'Camisetas' },
-  { id: 'cam_i', nome: 'Camiseta Infantil',   preco: 30,  icon: '👕',    cat: 'Camisetas' },
-  { id: 'body',  nome: 'Body Bebê',            preco: 30,  icon: '🍼',    cat: 'Camisetas' },
-  { id: 'can_c', nome: 'Caneca Cerâmica',      preco: 35,  icon: '☕',    cat: 'Canecas'   },
-  { id: 'can_v', nome: 'Caneca de Vidro',      preco: 30,  icon: '🥛',    cat: 'Canecas'   },
-  { id: 'can_m', nome: 'Caneca Mágica',        preco: 40,  icon: '✨',    cat: 'Canecas'   },
-  { id: 'almo',  nome: 'Almofada',             preco: 45,  icon: '🛋️',   cat: 'Decoração' },
-  { id: 'sque',  nome: 'Squeeze',              preco: 40,  icon: '🧴',    cat: 'Decoração' },
-  { id: 'placa', nome: 'Placa Decorativa',     preco: 35,  icon: '🖼️',   cat: 'Decoração' },
-  { id: 'quad',  nome: 'Quadro A4',            preco: 50,  icon: '🖼️',   cat: 'Decoração' },
-  { id: 'mouse', nome: 'Mousepad',             preco: 30,  icon: '🖱️',   cat: 'Decoração' },
-  { id: 'k_mae', nome: 'Kit Mãe (cam+caneca)', preco: 65,  icon: '🎁',    cat: 'Kits'      },
-  { id: 'k_cas', nome: 'Kit Casal',            preco: 70,  icon: '💑',    cat: 'Kits'      },
-  { id: 'k_fam', nome: 'Kit Família',          preco: 120, icon: '👨‍👩‍👧', cat: 'Kits'      },
+  { id: 'cam_a', nome: 'Camiseta Adulto',     preco: 35,  icon: '👕',    cat: 'Camisetas', descricao: '', estoque: 0, ativo: true },
+  { id: 'cam_i', nome: 'Camiseta Infantil',   preco: 30,  icon: '👕',    cat: 'Camisetas', descricao: '', estoque: 0, ativo: true },
+  { id: 'body',  nome: 'Body Bebê',            preco: 30,  icon: '🍼',    cat: 'Camisetas', descricao: '', estoque: 0, ativo: true },
+  { id: 'can_c', nome: 'Caneca Cerâmica',      preco: 35,  icon: '☕',    cat: 'Canecas',   descricao: '', estoque: 0, ativo: true },
+  { id: 'can_v', nome: 'Caneca de Vidro',      preco: 30,  icon: '🥛',    cat: 'Canecas',   descricao: '', estoque: 0, ativo: true },
+  { id: 'can_m', nome: 'Caneca Mágica',        preco: 40,  icon: '✨',    cat: 'Canecas',   descricao: '', estoque: 0, ativo: true },
+  { id: 'almo',  nome: 'Almofada',             preco: 45,  icon: '🛋️',   cat: 'Decoração', descricao: '', estoque: 0, ativo: true },
+  { id: 'sque',  nome: 'Squeeze',              preco: 40,  icon: '🧴',    cat: 'Decoração', descricao: '', estoque: 0, ativo: true },
+  { id: 'placa', nome: 'Placa Decorativa',     preco: 35,  icon: '🖼️',   cat: 'Decoração', descricao: '', estoque: 0, ativo: true },
+  { id: 'quad',  nome: 'Quadro A4',            preco: 50,  icon: '🖼️',   cat: 'Decoração', descricao: '', estoque: 0, ativo: true },
+  { id: 'mouse', nome: 'Mousepad',             preco: 30,  icon: '🖱️',   cat: 'Decoração', descricao: '', estoque: 0, ativo: true },
+  { id: 'k_mae', nome: 'Kit Mãe (cam+caneca)', preco: 65,  icon: '🎁',    cat: 'Kits',      descricao: '', estoque: 0, ativo: true },
+  { id: 'k_cas', nome: 'Kit Casal',            preco: 70,  icon: '💑',    cat: 'Kits',      descricao: '', estoque: 0, ativo: true },
+  { id: 'k_fam', nome: 'Kit Família',          preco: 120, icon: '👨‍👩‍👧', cat: 'Kits',      descricao: '', estoque: 0, ativo: true },
 ];
 
-export const getProd = (id: string): Prod | undefined => PRODS.find(p => p.id === id);
+let _prodCache: Prod[] = [...PRODS];
+
+export function setProdCache(prods: Prod[]) {
+  _prodCache = prods;
+}
+
+export const getProd = (id: string): Prod | undefined => _prodCache.find(p => p.id === id);
 
 export const OPS: Op[] = [
   { id: 'bella', nome: 'Bella', cor: '#c97d6e' },
@@ -60,6 +79,10 @@ export const CFG0: Config = {
   telefone: '(61) 99999-9999',
   instagram: '@bellapersonalizados',
   cidade: 'Valparaíso de Goiás - GO',
+  ops: [
+    { id: 'bella', nome: 'Bella', cor: '#c97d6e' },
+    { id: 'filha', nome: 'Filha', cor: '#b8826a' },
+  ],
   msgs: {
     confirmado: 'Olá {nome}! 🌸 Seu pedido de *{produto}* foi confirmado! Prazo: *{prazo}*. Total: *{total}*. Sinal: *{sinal}*. Restante: *{restante}*. Qualquer dúvida, é só chamar! 💕',
     producao:   'Olá {nome}! 🎨 Seu pedido de *{produto}* entrou em produção! Prazo: *{prazo}*. 🌸',

@@ -1,61 +1,119 @@
-import { PRODS } from '../data/constants';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fmtR$ } from '../lib/helpers';
 import type { AppCtx } from '../types';
-const prodBia       = '/produto-bia.jpg';
-const prodCanecas   = '/produto-canecas.jpg';
-const prodCamisetas = '/produto-camisetas.jpg';
 
 type Props = { ctx: AppCtx };
 
-const HERO = [
-  { img: prodBia,       label: 'Canecas com nome',       sub: 'Vidro & cerâmica' },
-  { img: prodCanecas,   label: 'Coleção Mães',            sub: 'Lançamento da estação' },
-  { img: prodCamisetas, label: 'Camisetas mãe & filho(a)', sub: 'Combinando' },
-];
-
-const CATS = ['Camisetas', 'Canecas', 'Decoração', 'Kits'];
-
 export function Catalogo({ ctx }: Props) {
-  const { peds } = ctx;
+  const { prods, peds, setModal } = ctx;
+  const [catAtiva, setCatAtiva] = useState('Todos');
+
+  const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
+  const filtered = catAtiva === 'Todos' ? prods : prods.filter(p => p.cat === catAtiva);
+
+  const totalEstoque = prods.reduce((a, b) => a + (b.estoque || 0), 0);
+  const totalCats = new Set(prods.map(p => p.cat)).size;
+
+  const vendidos = (id: string) => peds.filter(x => x.prodId === id).reduce((a, b) => a + b.qtd, 0);
+
+  const estoqueLabel = (est: number) => {
+    if (est === 0) return { label: 'ESGOTADO', cls: 'red' };
+    if (est <= 5)  return { label: `${est} un`, cls: 'yellow' };
+    return { label: `${est} un`, cls: 'green' };
+  };
+
   return (
-    <div className="catalogo">
-      <div className="cat-showcase">
-        {HERO.map((h, i) => (
-          <div key={i} className="cat-showcase-card">
-            <img src={h.img} alt={h.label} />
-            <div className="cat-showcase-overlay">
-              <div className="cat-eyebrow">Vitrine</div>
-              <div className="cat-title">{h.label}</div>
-              <div className="cat-sub">{h.sub}</div>
-            </div>
+    <div className="catalogo cat-v2">
+      <div className="cat-v2-header">
+        <div>
+          <div className="card-eyebrow">Gestão de Produtos</div>
+          <h2 className="topbar-title">Catálogo</h2>
+        </div>
+        <div className="cat-v2-stats">
+          <div className="cat-v2-stat">
+            <span className="cat-v2-stat-val">{prods.length}</span>
+            <span className="cat-v2-stat-lbl">Produtos</span>
           </div>
+          <div className="cat-v2-stat">
+            <span className="cat-v2-stat-val">{totalEstoque}</span>
+            <span className="cat-v2-stat-lbl">Em estoque</span>
+          </div>
+          <div className="cat-v2-stat">
+            <span className="cat-v2-stat-val">{totalCats}</span>
+            <span className="cat-v2-stat-lbl">Categorias</span>
+          </div>
+          <motion.button
+            className="btn-primary cat-fab"
+            onClick={() => setModal({ tipo: 'prod' })}
+            whileHover={{ translateY: -2 }}
+            whileTap={{ scale: 0.96 }}
+          >
+            + Produto
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="cat-filter-row">
+        {cats.map(cat => (
+          <button
+            key={cat}
+            className={`cat-pill${catAtiva === cat ? ' active' : ''}`}
+            onClick={() => setCatAtiva(cat)}
+          >
+            {cat}
+          </button>
         ))}
       </div>
 
-      {CATS.map(cat => (
-        <section key={cat} className="cat-section">
-          <header className="cat-section-head">
-            <span className="cat-section-line" />
-            <h2>{cat}</h2>
-            <span className="cat-section-line" />
-          </header>
-          <div className="cat-grid">
-            {PRODS.filter(p => p.cat === cat).map(p => {
-              const qtdV = peds.filter(x => x.prodId === p.id).reduce((a, b) => a + b.qtd, 0);
-              return (
-                <div key={p.id} className="cat-prod">
-                  <div className="cat-prod-img"><div className="cat-prod-emoji">{p.icon}</div></div>
-                  <div className="cat-prod-body">
-                    <div className="cat-prod-name">{p.nome}</div>
-                    <div className="cat-prod-meta">{qtdV} vendidos</div>
+      <div className="cat-grid-v2">
+        <AnimatePresence mode="popLayout">
+          {filtered.map((p, i) => {
+            const sold = vendidos(p.id);
+            const est  = estoqueLabel(p.estoque ?? 0);
+            return (
+              <motion.div
+                key={p.id}
+                className="cat-card-v2"
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ delay: i * 0.04, type: 'spring', stiffness: 320, damping: 26 }}
+              >
+                <div className="cat-photo">
+                  <div className="cat-photo-inner">
+                    {p.fotoUrl
+                      ? <img src={p.fotoUrl} alt={p.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <div className="cat-photo-emoji">{p.icon}</div>
+                    }
+                    {p.destaque && <div className="cat-destaque-badge">DESTAQUE</div>}
+                    <div className={`cat-stock-badge ${est.cls}`}>{est.label}</div>
+                    {!p.ativo && <div className="cat-inativo-overlay">INATIVO</div>}
                   </div>
-                  <div className="cat-prod-price">{fmtR$(p.preco)}</div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+                <div className="cat-card-body">
+                  <div className="cat-cat-chip">{p.cat}</div>
+                  <div className="cat-card-name">{p.nome}</div>
+                  <div className="cat-price-row">
+                    <span className="cat-price">{fmtR$(p.preco)}</span>
+                    {p.precoDe && <span className="cat-price-de">{fmtR$(p.precoDe)}</span>}
+                  </div>
+                  <div className="cat-sold">{sold} vendidos</div>
+                </div>
+                <div className="cat-card-actions">
+                  <button
+                    className="btn-soft-sm"
+                    onClick={() => setModal({ tipo: 'prod', dados: p })}
+                  >
+                    Editar
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

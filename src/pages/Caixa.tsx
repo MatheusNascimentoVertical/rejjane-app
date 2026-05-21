@@ -1,13 +1,13 @@
-import { OPS } from '../data/constants';
 import { hoje, fmtData, fmtR$ } from '../lib/helpers';
 import type { AppCtx } from '../types';
 
 type Props = { ctx: AppCtx };
 
 export function Caixa({ ctx }: Props) {
-  const { fin, recMes, despMes, setModal } = ctx;
+  const { fin, recMes, despMes, setModal, cfg } = ctx;
   const saldo = recMes - despMes;
   const mes = hoje().slice(0, 7);
+  const ops = cfg.ops ?? [];
 
   return (
     <div className="caixa">
@@ -31,7 +31,7 @@ export function Caixa({ ctx }: Props) {
               <h3 className="card-title">Entradas do mês</h3>
             </div>
           </div>
-          {OPS.map(op => {
+          {ops.map(op => {
             const rec = fin.filter(f => f.tipo === 'entrada' && f.op === op.id && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
             const pct = recMes > 0 ? (rec / recMes) * 100 : 0;
             return (

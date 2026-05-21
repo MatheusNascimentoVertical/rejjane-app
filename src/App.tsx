@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { collection, doc, getDocs, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { db } from './lib/firebase';
-import { CFG0, PROX, getProd } from './data/constants';
+import { signOut } from 'firebase/auth';
+import { db, auth } from './lib/firebase';
+import { CFG0, PRODS, PROX, getProd, setProdCache } from './data/constants';
+import type { Prod } from './data/constants';
 import { hoje } from './lib/helpers';
+import { useAuth } from './hooks/useAuth';
 import { BackgroundDecor } from './components/BackgroundDecor';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -13,8 +16,9 @@ import { Clientes } from './pages/Clientes';
 import { Catalogo } from './pages/Catalogo';
 import { Caixa } from './pages/Caixa';
 import { Config } from './pages/Config';
+import { Login } from './pages/Login';
 import { ModalRoot } from './modals/ModalRoot';
-import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm } from './types';
+import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm, Produto } from './types';
 
 export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
 
@@ -30,12 +34,27 @@ function syncArr<T extends { id: number }>(col: string, prev: T[], next: T[]) {
     if (!nextMap.has(id)) deleteDoc(doc(db, col, String(id)));
 }
 
+function syncProds(prev: Produto[], next: Produto[]) {
+  const prevMap = new Map(prev.map(x => [x.id, x]));
+  const nextMap = new Map(next.map(x => [x.id, x]));
+  for (const [id, item] of nextMap) {
+    const old = prevMap.get(id);
+    if (!old || JSON.stringify(old) !== JSON.stringify(item))
+      setDoc(doc(db, 'produtos', id), item);
+  }
+  for (const [id] of prevMap)
+    if (!nextMap.has(id)) deleteDoc(doc(db, 'produtos', id));
+}
+
 export default function App() {
+  const { user, loading: authLoading } = useAuth();
+
   const [aba, setAba] = useState<Aba>('dash');
-  const [peds, setPedsS] = useState<Pedido[]>([]);
-  const [clis, setClisS] = useState<Cliente[]>([]);
-  const [fin,  setFinS]  = useState<Lanc[]>([]);
-  const [cfg,  setCfgS]  = useState<ConfigType>(CFG0);
+  const [peds, setPedsS]   = useState<Pedido[]>([]);
+  const [clis, setClisS]   = useState<Cliente[]>([]);
+  const [fin,  setFinS]    = useState<Lanc[]>([]);
+  const [cfg,  setCfgS]    = useState<ConfigType>(CFG0);
+  const [prodsS, setProdsS] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [fSt,  setFSt]  = useState('todos');
@@ -43,20 +62,36 @@ export default function App() {
   const fechar = () => setModal(null);
 
   useEffect(() => {
+    if (!user) return;
     Promise.all([
       getDocs(collection(db, 'pedidos')),
       getDocs(collection(db, 'clientes')),
       getDocs(collection(db, 'lancamentos')),
       getDoc(doc(db, 'config', 'main')),
-    ]).then(([ps, cs, fs, cfgSnap]) => {
+      getDocs(collection(db, 'produtos')),
+    ]).then(([ps, cs, fs, cfgSnap, prSnap]) => {
       setPedsS(ps.docs.map(d => d.data() as Pedido));
       setClisS(cs.docs.map(d => d.data() as Cliente));
       setFinS(fs.docs.map(d => d.data() as Lanc));
-      if (cfgSnap.exists()) setCfgS(cfgSnap.data() as ConfigType);
-      else setDoc(doc(db, 'config', 'main'), CFG0);
+      if (cfgSnap.exists()) {
+        const cfgData = cfgSnap.data() as ConfigType;
+        if (!cfgData.ops) cfgData.ops = CFG0.ops;
+        setCfgS(cfgData);
+      } else {
+        setDoc(doc(db, 'config', 'main'), CFG0);
+      }
+      let loadedProds: Produto[];
+      if (prSnap.empty) {
+        loadedProds = PRODS.map(p => ({ ...p } as Produto));
+        loadedProds.forEach(p => setDoc(doc(db, 'produtos', p.id), p));
+      } else {
+        loadedProds = prSnap.docs.map(d => d.data() as Produto);
+      }
+      setProdsS(loadedProds);
+      setProdCache(loadedProds as Prod[]);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   const setPeds = (upd: React.SetStateAction<Pedido[]>) =>
     setPedsS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('pedidos', prev, next); return next; });
@@ -69,6 +104,32 @@ export default function App() {
 
   const setCfg = (upd: React.SetStateAction<ConfigType>) =>
     setCfgS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; setDoc(doc(db, 'config', 'main'), next); return next; });
+
+  const setProds = (upd: React.SetStateAction<Produto[]>) =>
+    setProdsS(prev => {
+      const next = typeof upd === 'function' ? upd(prev) : upd;
+      syncProds(prev, next);
+      setProdCache(next as Prod[]);
+      return next;
+    });
+
+  const zerarDados = async () => {
+    const [ps, cs, fs] = await Promise.all([
+      getDocs(collection(db, 'pedidos')),
+      getDocs(collection(db, 'clientes')),
+      getDocs(collection(db, 'lancamentos')),
+    ]);
+    await Promise.all([
+      ...ps.docs.map(d => deleteDoc(d.ref)),
+      ...cs.docs.map(d => deleteDoc(d.ref)),
+      ...fs.docs.map(d => deleteDoc(d.ref)),
+    ]);
+    setPedsS([]);
+    setClisS([]);
+    setFinS([]);
+  };
+
+  const sair = () => signOut(auth);
 
   const mes = hoje().slice(0, 7);
   const recMes  = fin.filter(f => f.tipo === 'entrada' && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
@@ -124,7 +185,18 @@ export default function App() {
     modal, setModal, avancar, salvarPed,
     ativos, atrasados, recMes, despMes,
     fSt, setFSt, search, setSearch, fechar,
+    prods: prodsS, setProds: setProds as React.Dispatch<React.SetStateAction<Produto[]>>,
+    zerarDados, sair,
   };
+
+  if (authLoading) return (
+    <div className="bella-loading">
+      <img src="/bella-logo.jpeg" alt="Bella" className="bella-loading-logo" />
+      <p>Carregando…</p>
+    </div>
+  );
+
+  if (!user) return <Login />;
 
   if (loading) return (
     <div className="bella-loading">

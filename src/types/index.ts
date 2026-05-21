@@ -1,8 +1,24 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 export type PedStatus = 'orcamento' | 'confirmado' | 'producao' | 'pronto' | 'entregue' | 'cancelado';
-export type OpId = 'bella' | 'filha';
+export type OpId = string;
 export type MsgKey = 'orcamento' | 'confirmado' | 'producao' | 'pronto' | 'entregue';
+
+export type Op = { id: string; nome: string; cor: string };
+
+export type Produto = {
+  id: string;
+  nome: string;
+  cat: string;
+  icon: string;
+  preco: number;
+  precoDe?: number;
+  descricao: string;
+  estoque: number;
+  fotoUrl?: string;
+  ativo: boolean;
+  destaque?: boolean;
+};
 
 export type Cliente = {
   id: number;
@@ -45,6 +61,7 @@ export type Config = {
   instagram: string;
   cidade: string;
   msgs: Record<MsgKey, string>;
+  ops: Op[];
 };
 
 export type ModalState =
@@ -52,7 +69,8 @@ export type ModalState =
   | { tipo: 'cli'; dados: Partial<Cliente> }
   | { tipo: 'fin'; dados: { tipo: 'entrada' | 'saida' } }
   | { tipo: 'wpp'; ped: Pedido }
-  | { tipo: 'oc'; ped: Pedido };
+  | { tipo: 'oc'; ped: Pedido }
+  | { tipo: 'prod'; dados?: Partial<Produto> };
 
 export type PedidoForm = {
   id?: number;
@@ -91,4 +109,8 @@ export type AppCtx = {
   search: string;
   setSearch: Dispatch<SetStateAction<string>>;
   fechar: () => void;
+  prods: Produto[];
+  setProds: Dispatch<SetStateAction<Produto[]>>;
+  zerarDados: () => Promise<void>;
+  sair: () => void;
 };

@@ -1,5 +1,4 @@
-import { OPS } from '../data/constants';
-import type { AppCtx, MsgKey } from '../types';
+import type { AppCtx, MsgKey, Op } from '../types';
 
 type Props = { ctx: AppCtx };
 
@@ -21,8 +20,25 @@ const MSG_LABELS: [MsgKey, string][] = [
 ];
 
 export function Config({ ctx }: Props) {
-  const { cfg, setCfg } = ctx;
+  const { cfg, setCfg, zerarDados, sair } = ctx;
   const upd = (k: string, v: string) => setCfg(c => ({ ...c, [k]: v }));
+
+  const ops = cfg.ops ?? [];
+
+  const updateOp = (idx: number, field: keyof Op, value: string) => {
+    const next = ops.map((o, i) => i === idx ? { ...o, [field]: value } : o);
+    setCfg(c => ({ ...c, ops: next }));
+  };
+
+  const removeOp = (idx: number) => {
+    const next = ops.filter((_, i) => i !== idx);
+    setCfg(c => ({ ...c, ops: next }));
+  };
+
+  const addOp = () => {
+    const newOp: Op = { id: `op_${Date.now()}`, nome: 'Nova operadora', cor: '#c97d6e' };
+    setCfg(c => ({ ...c, ops: [...(c.ops ?? []), newOp] }));
+  };
 
   return (
     <div className="config">
@@ -43,17 +59,34 @@ export function Config({ ctx }: Props) {
       <section className="card-soft">
         <div className="card-eyebrow">Equipe</div>
         <h3 className="card-title">Operadoras ativas</h3>
-        <div className="ops-grid">
-          {OPS.map(op => (
-            <div key={op.id} className="op-chip">
-              <div className="op-chip-flower" style={{ color: op.cor }}>✿</div>
-              <div>
-                <div className="op-chip-name">{op.nome}</div>
-                <div className="op-chip-sub">Operadora</div>
-              </div>
-              <span className="op-chip-status">Ativa</span>
+        <div className="ops-edit-grid">
+          {ops.map((op, idx) => (
+            <div key={op.id} className="op-edit-card">
+              <input
+                type="color"
+                className="op-color-dot"
+                value={op.cor}
+                onChange={e => updateOp(idx, 'cor', e.target.value)}
+                title="Cor"
+              />
+              <input
+                value={op.nome}
+                onChange={e => updateOp(idx, 'nome', e.target.value)}
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 14, color: 'var(--ink)', fontFamily: 'inherit' }}
+              />
+              <button
+                type="button"
+                className="btn-ghost-sm"
+                onClick={() => removeOp(idx)}
+                style={{ color: '#b85050', padding: '4px 8px' }}
+              >
+                ✕
+              </button>
             </div>
           ))}
+          <button type="button" className="op-add-btn" onClick={addOp}>
+            + Adicionar operadora
+          </button>
         </div>
       </section>
 
@@ -75,6 +108,26 @@ export function Config({ ctx }: Props) {
             />
           </Field>
         ))}
+      </section>
+
+      <section className="card-soft danger-zone">
+        <div className="card-eyebrow" style={{ color: '#b85050' }}>Zona de Perigo</div>
+        <h3 className="card-title">Ações irreversíveis</h3>
+        <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 16 }}>
+          Atenção: estas ações não podem ser desfeitas. Todos os dados serão permanentemente removidos.
+        </p>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn-danger"
+            onClick={() => { if (confirm('Tem certeza? Todos os pedidos e clientes serão excluídos.')) zerarDados(); }}
+          >
+            Zerar Pedidos e Clientes
+          </button>
+          <button type="button" className="config-sair" onClick={sair}>
+            Sair da conta
+          </button>
+        </div>
       </section>
     </div>
   );
