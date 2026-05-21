@@ -25,11 +25,6 @@ export function Sheet({ title, subtitle, onClose, children, wide }: Props) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0, transition: { duration: 0.24 } }}
         transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        drag="y"
-        dragConstraints={{ top: 0 }}
-        dragElastic={{ top: 0.05, bottom: 0.6 }}
-        onDragEnd={(_e, info) => { if (info.offset.y > 100) onClose(); }}
-        style={{ cursor: 'grab' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="sheet-handle" />

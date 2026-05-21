@@ -9,7 +9,7 @@ import type { Aba } from '../App';
 type Props = { aba: Aba; setAba: (a: Aba) => void; atrasados: Pedido[] };
 
 export function BottomNav({ aba, setAba, atrasados }: Props) {
-  const navRef = useRef<HTMLElement | null>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   return (
     <nav className="bella-bn" ref={navRef}>
