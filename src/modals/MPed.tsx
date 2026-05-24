@@ -63,28 +63,47 @@ export function MPed({ dados, ctx, onClose }: Props) {
 
       <div className="ped-itens-label"><span className="field-label">Produtos do pedido</span></div>
       <div className="ped-itens">
-        {f.itens.map((item, i) => (
-          <div key={i} className="ped-item-row">
-            <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
-              {prodList.map(p => <option key={p.id} value={p.id}>{p.icon} {p.nome} — {fmtR$(p.preco)}</option>)}
-            </select>
-            <div className="ped-item-nums">
-              <div className="ped-item-field">
-                <span className="ped-item-lbl">Qtd</span>
-                <input type="number" min="1" value={item.qtd} onChange={e => updItem(i, { qtd: Math.max(1, Number(e.target.value) || 1) })} />
+        {f.itens.map((item, i) => {
+          const prodAtual = getProd(item.prodId);
+          return (
+            <div key={i} className="ped-item-card">
+              <div className="ped-item-top">
+                <span className="ped-item-icon">{prodAtual?.icon ?? '📦'}</span>
+                <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
+                  {prodList.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                </select>
+                {f.itens.length > 1 && (
+                  <button className="ped-item-del" onClick={() => removeItem(i)}>×</button>
+                )}
               </div>
-              <div className="ped-item-field">
-                <span className="ped-item-lbl">R$ unit.</span>
-                <input type="number" step="0.01" value={item.vUnit} onChange={e => updItem(i, { vUnit: Number(e.target.value) || 0 })} />
+              <div className="ped-item-bottom">
+                <div className="ped-qty-wrap">
+                  <span className="ped-item-lbl">Qtd</span>
+                  <div className="ped-qty-ctrl">
+                    <button type="button" className="ped-qty-btn" onClick={() => updItem(i, { qtd: Math.max(1, Number(item.qtd) - 1) })}>−</button>
+                    <span className="ped-qty-num">{item.qtd}</span>
+                    <button type="button" className="ped-qty-btn" onClick={() => updItem(i, { qtd: Number(item.qtd) + 1 })}>+</button>
+                  </div>
+                </div>
+                <div className="ped-item-field">
+                  <span className="ped-item-lbl">Valor unit.</span>
+                  <div className="ped-price-input">
+                    <span>R$</span>
+                    <input type="number" step="0.01" value={item.vUnit} onChange={e => updItem(i, { vUnit: Number(e.target.value) || 0 })} />
+                  </div>
+                </div>
+                <div className="ped-item-total">
+                  <span className="ped-item-lbl">Subtotal</span>
+                  <span className="ped-item-sub">{fmtR$(Number(item.qtd) * Number(item.vUnit))}</span>
+                </div>
               </div>
-              <span className="ped-item-sub">{fmtR$(Number(item.qtd) * Number(item.vUnit))}</span>
             </div>
-            {f.itens.length > 1 && (
-              <button className="ped-item-del" onClick={() => removeItem(i)}>×</button>
-            )}
-          </div>
-        ))}
-        <button className="ped-add-item" onClick={addItem}>+ Adicionar produto</button>
+          );
+        })}
+        <button className="ped-add-item" onClick={addItem}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar produto
+        </button>
       </div>
 
       <div className="total-box">
