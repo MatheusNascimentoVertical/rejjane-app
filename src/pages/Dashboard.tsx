@@ -10,7 +10,7 @@ const bellaLogo = '/bella-logo.jpeg';
 type Props = { ctx: AppCtx; setAba: (a: Aba) => void };
 
 export function Dashboard({ ctx, setAba }: Props) {
-  const { ativos, atrasados, peds, fin, recMes, despMes } = ctx;
+  const { ativos, atrasados, peds, fin, recMes, despMes, prods } = ctx;
   const saldo = recMes - despMes;
   const producaoAgora = peds.filter(p => p.st === 'producao').length;
   const prontos = peds.filter(p => p.st === 'pronto').length;
@@ -27,9 +27,10 @@ export function Dashboard({ ctx, setAba }: Props) {
         map.set(it.prodId, (map.get(it.prodId) ?? 0) + it.qtd * it.vUnit);
       });
     });
-    return PRODS.map(p => ({ ...p, total: map.get(p.id) ?? 0 }))
+    const lista = prods.length > 0 ? prods : PRODS;
+    return lista.map(p => ({ ...p, total: map.get(p.id) ?? 0 }))
       .sort((a, b) => b.total - a.total).slice(0, 5);
-  }, [peds]);
+  }, [peds, prods]);
 
   return (
     <div className="dash">
