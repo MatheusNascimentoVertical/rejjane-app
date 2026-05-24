@@ -10,12 +10,18 @@ export function Catalogo({ ctx }: Props) {
   const [catAtiva, setCatAtiva] = useState('Todos');
 
   const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
-  const filtered = catAtiva === 'Todos' ? prods : prods.filter(p => p.cat === catAtiva);
+  const filtered = (catAtiva === 'Todos' ? prods : prods.filter(p => p.cat === catAtiva))
+    .slice()
+    .sort((a, b) => vendidos(b.id) - vendidos(a.id));
 
   const totalEstoque = prods.reduce((a, b) => a + (b.estoque || 0), 0);
   const totalCats = new Set(prods.map(p => p.cat)).size;
 
-  const vendidos = (id: string) => peds.filter(x => x.prodId === id).reduce((a, b) => a + b.qtd, 0);
+  const vendidos = (id: string) =>
+    peds.reduce((sum, p) => {
+      const item = (p.itens ?? []).find(x => x.prodId === id);
+      return sum + (item?.qtd ?? 0);
+    }, 0);
 
   const estoqueLabel = (est: number) => {
     if (est === 0) return { label: 'ESGOTADO', cls: 'red' };

@@ -102,13 +102,13 @@ export const CLI0: Cliente[] = [
 ];
 
 export const PED0: Pedido[] = [
-  { id: 1024, cliId: 1, cliNome: 'Ana Paula Souza',  prodId: 'k_mae', qtd: 2, vUnit: 65,  vTotal: 130, arte: 'Kit mãe e filho — coração azul com flores',         op: 'bella', data: hoje(),    prazo: dPlus(3),  st: 'producao',   sinal: 65, obs: 'Arte aprovada. Urgente!' },
-  { id: 1023, cliId: 2, cliNome: 'Carla Santos',     prodId: 'can_c', qtd: 3, vUnit: 35,  vTotal: 105, arte: 'Canecas Dia das Mães — 3 modelos coloridos',         op: 'filha', data: hoje(),    prazo: dPlus(5),  st: 'confirmado', sinal: 50, obs: '' },
-  { id: 1022, cliId: 3, cliNome: 'Renata Lima',      prodId: 'cam_a', qtd: 5, vUnit: 35,  vTotal: 175, arte: 'Camisetas família — nomes + emoji',                  op: 'bella', data: hoje(),    prazo: dPlus(7),  st: 'orcamento',  sinal: 0,  obs: 'Aguardando arte final.' },
-  { id: 1021, cliId: 4, cliNome: 'Juliana Costa',    prodId: 'can_v', qtd: 1, vUnit: 30,  vTotal: 30,  arte: 'Caneca vidro — nome Bia em script + flores rosas',   op: 'filha', data: dPlus(-2), prazo: dPlus(-1), st: 'pronto',     sinal: 30, obs: 'Pronto pra retirar.' },
-  { id: 1020, cliId: 5, cliNome: 'Bia Carvalho',     prodId: 'cam_i', qtd: 2, vUnit: 30,  vTotal: 60,  arte: 'Camisetas chicletinho da mamãe',                     op: 'bella', data: dPlus(-1), prazo: dPlus(2),  st: 'producao',   sinal: 30, obs: '' },
-  { id: 1019, cliId: 6, cliNome: 'Marina Oliveira',  prodId: 'almo',  qtd: 1, vUnit: 45,  vTotal: 45,  arte: 'Almofada coração — foto família',                    op: 'filha', data: dPlus(-3), prazo: dPlus(4),  st: 'confirmado', sinal: 20, obs: 'Cliente envia foto até quinta.' },
-  { id: 1018, cliId: 1, cliNome: 'Ana Paula Souza',  prodId: 'can_m', qtd: 2, vUnit: 40,  vTotal: 80,  arte: 'Caneca mágica — surpresa aniversário',               op: 'bella', data: dPlus(-5), prazo: dPlus(-4), st: 'entregue',   sinal: 80, obs: '' },
+  { id: 1024, cliId: 1, cliNome: 'Ana Paula Souza',  itens: [{ prodId: 'k_mae', qtd: 2, vUnit: 65  }], vTotal: 130, arte: 'Kit mãe e filho — coração azul com flores',         op: 'bella', data: hoje(),    prazo: dPlus(3),  st: 'producao',   sinal: 65, obs: 'Arte aprovada. Urgente!' },
+  { id: 1023, cliId: 2, cliNome: 'Carla Santos',     itens: [{ prodId: 'can_c', qtd: 3, vUnit: 35  }], vTotal: 105, arte: 'Canecas Dia das Mães — 3 modelos coloridos',         op: 'filha', data: hoje(),    prazo: dPlus(5),  st: 'confirmado', sinal: 50, obs: '' },
+  { id: 1022, cliId: 3, cliNome: 'Renata Lima',      itens: [{ prodId: 'cam_a', qtd: 5, vUnit: 35  }], vTotal: 175, arte: 'Camisetas família — nomes + emoji',                  op: 'bella', data: hoje(),    prazo: dPlus(7),  st: 'orcamento',  sinal: 0,  obs: 'Aguardando arte final.' },
+  { id: 1021, cliId: 4, cliNome: 'Juliana Costa',    itens: [{ prodId: 'can_v', qtd: 1, vUnit: 30  }], vTotal: 30,  arte: 'Caneca vidro — nome Bia em script + flores rosas',   op: 'filha', data: dPlus(-2), prazo: dPlus(-1), st: 'pronto',     sinal: 30, obs: 'Pronto pra retirar.' },
+  { id: 1020, cliId: 5, cliNome: 'Bia Carvalho',     itens: [{ prodId: 'cam_i', qtd: 2, vUnit: 30  }], vTotal: 60,  arte: 'Camisetas chicletinho da mamãe',                     op: 'bella', data: dPlus(-1), prazo: dPlus(2),  st: 'producao',   sinal: 30, obs: '' },
+  { id: 1019, cliId: 6, cliNome: 'Marina Oliveira',  itens: [{ prodId: 'almo',  qtd: 1, vUnit: 45  }], vTotal: 45,  arte: 'Almofada coração — foto família',                    op: 'filha', data: dPlus(-3), prazo: dPlus(4),  st: 'confirmado', sinal: 20, obs: 'Cliente envia foto até quinta.' },
+  { id: 1018, cliId: 1, cliNome: 'Ana Paula Souza',  itens: [{ prodId: 'can_m', qtd: 2, vUnit: 40  }], vTotal: 80,  arte: 'Caneca mágica — surpresa aniversário',               op: 'bella', data: dPlus(-5), prazo: dPlus(-4), st: 'entregue',   sinal: 80, obs: '' },
 ];
 
 export const FIN0: Lanc[] = [

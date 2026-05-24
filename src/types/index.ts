@@ -28,13 +28,17 @@ export type Cliente = {
   fav: boolean;
 };
 
+export type PedItem = {
+  prodId: string;
+  qtd: number;
+  vUnit: number;
+};
+
 export type Pedido = {
   id: number;
   cliId: number;
   cliNome: string;
-  prodId: string;
-  qtd: number;
-  vUnit: number;
+  itens: PedItem[];
   vTotal: number;
   arte: string;
   op: OpId;
@@ -75,9 +79,7 @@ export type ModalState =
 export type PedidoForm = {
   id?: number;
   cliId: string | number;
-  prodId: string;
-  qtd: number | string;
-  vUnit: number | string;
+  itens: PedItem[];
   arte: string;
   op: OpId;
   data: string;

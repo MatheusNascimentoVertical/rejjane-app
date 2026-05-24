@@ -20,10 +20,16 @@ export function Dashboard({ ctx, setAba }: Props) {
     return d >= w;
   }).length;
 
-  const rankProd = useMemo(() => PRODS.map(p => ({
-    ...p,
-    total: peds.filter(x => x.prodId === p.id).reduce((a, b) => a + b.vTotal, 0),
-  })).sort((a, b) => b.total - a.total).slice(0, 5), [peds]);
+  const rankProd = useMemo(() => {
+    const map = new Map<string, number>();
+    peds.forEach(p => {
+      (p.itens ?? []).forEach(it => {
+        map.set(it.prodId, (map.get(it.prodId) ?? 0) + it.qtd * it.vUnit);
+      });
+    });
+    return PRODS.map(p => ({ ...p, total: map.get(p.id) ?? 0 }))
+      .sort((a, b) => b.total - a.total).slice(0, 5);
+  }, [peds]);
 
   return (
     <div className="dash">
@@ -60,7 +66,7 @@ export function Dashboard({ ctx, setAba }: Props) {
           </div>
           <div className="fila-list">
             {ativos.sort((a, b) => a.prazo.localeCompare(b.prazo)).slice(0, 5).map(p => {
-              const prod = getProd(p.prodId);
+              const prod = getProd(p.itens?.[0]?.prodId ?? '');
               const stCfg = ST[p.st];
               const dias = diasAte(p.prazo);
               return (
@@ -68,7 +74,9 @@ export function Dashboard({ ctx, setAba }: Props) {
                   <div className="fila-icon" style={{ background: stCfg.bg }}>{prod?.icon}</div>
                   <div className="fila-body">
                     <div className="fila-name">{p.cliNome}</div>
-                    <div className="fila-meta">{prod?.nome} · {p.qtd}un · {fmtR$(p.vTotal)}</div>
+                    <div className="fila-meta">
+                      {(p.itens ?? []).map(it => { const pr = getProd(it.prodId); return `${pr?.nome ?? ''}×${it.qtd}`; }).join(' · ')} · {fmtR$(p.vTotal)}
+                    </div>
                   </div>
                   <div className="fila-right">
                     <span className="status-pill" style={{ color: stCfg.cor, background: stCfg.bg }}>{stCfg.label}</span>

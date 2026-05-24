@@ -7,7 +7,6 @@ type Props = { ped: Pedido; ctx: AppCtx; onClose: () => void };
 
 export function MOrc({ ped, ctx, onClose }: Props) {
   const { cfg } = ctx;
-  const prod = getProd(ped.prodId);
   const num = String(ped.id).padStart(4, '0');
   const rest = ped.vTotal - ped.sinal;
 
@@ -56,13 +55,19 @@ export function MOrc({ ped, ctx, onClose }: Props) {
             <tr><th>Descrição da arte</th><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>{ped.arte}</td>
-              <td>{prod?.icon} {prod?.nome}</td>
-              <td className="ctr">{ped.qtd}</td>
-              <td className="rt">{fmtR$(ped.vUnit)}</td>
-              <td className="rt strong">{fmtR$(ped.vTotal)}</td>
-            </tr>
+            {(ped.itens ?? []).map((item, i) => {
+              const prod = getProd(item.prodId);
+              const sub = item.qtd * item.vUnit;
+              return (
+                <tr key={i}>
+                  {i === 0 && <td rowSpan={ped.itens?.length ?? 1}>{ped.arte}</td>}
+                  <td>{prod?.icon} {prod?.nome}</td>
+                  <td className="ctr">{item.qtd}</td>
+                  <td className="rt">{fmtR$(item.vUnit)}</td>
+                  <td className="rt strong">{fmtR$(sub)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

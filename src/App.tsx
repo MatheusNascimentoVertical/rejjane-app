@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { collection, doc, getDocs, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { db, auth } from './lib/firebase';
-import { CFG0, PRODS, PROX, getProd, setProdCache } from './data/constants';
+import { CFG0, PRODS, PROX, setProdCache } from './data/constants';
 import type { Prod } from './data/constants';
 import { hoje } from './lib/helpers';
 import { useAuth } from './hooks/useAuth';
@@ -77,7 +77,13 @@ export default function App() {
       getDoc(doc(db, 'config', 'main')),
       getDocs(collection(db, 'produtos')),
     ]).then(([ps, cs, fs, cfgSnap, prSnap]) => {
-      setPedsS(ps.docs.map(d => d.data() as Pedido));
+      setPedsS(ps.docs.map(d => {
+        const raw = d.data() as any;
+        if (!raw.itens && raw.prodId) {
+          return { ...raw, itens: [{ prodId: raw.prodId, qtd: raw.qtd ?? 1, vUnit: raw.vUnit ?? 0 }] } as Pedido;
+        }
+        return raw as Pedido;
+      }));
       setClisS(cs.docs.map(d => d.data() as Cliente));
       setFinS(fs.docs.map(d => d.data() as Lanc));
       if (cfgSnap.exists()) {
@@ -156,16 +162,13 @@ export default function App() {
   }));
 
   const salvarPed = (f: PedidoForm) => {
-    const prod = getProd(String(f.prodId));
     const cli  = clis.find(c => c.id === Number(f.cliId));
-    const total = (Number(f.qtd) || 1) * (Number(f.vUnit) || prod?.preco || 0);
+    const total = f.itens.reduce((s, it) => s + it.qtd * it.vUnit, 0);
     const obj: Pedido = {
       id:      f.id || Date.now(),
       cliId:   Number(f.cliId),
       cliNome: cli?.nome || '',
-      prodId:  String(f.prodId),
-      qtd:     Number(f.qtd),
-      vUnit:   Number(f.vUnit),
+      itens:   f.itens,
       vTotal:  total,
       arte:    f.arte,
       op:      f.op,

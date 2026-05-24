@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Sheet, Field } from './Sheet';
 import { PRODS, ST, getProd } from '../data/constants';
 import { hoje, dPlus, fmtR$ } from '../lib/helpers';
-import type { AppCtx, PedidoForm, PedStatus, OpId } from '../types';
+import type { AppCtx, PedidoForm, PedItem, PedStatus, OpId } from '../types';
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
@@ -11,11 +11,11 @@ export function MPed({ dados, ctx, onClose }: Props) {
   const ops = cfg.ops ?? [];
   const prodList = ctx.prods.length > 0 ? ctx.prods : PRODS;
 
+  const defaultItem = (): PedItem => ({ prodId: prodList[0]?.id ?? '', qtd: 1, vUnit: prodList[0]?.preco ?? 0 });
+
   const [f, setF] = useState<PedidoForm>({
     cliId:  dados?.cliId  ?? (clis[0]?.id ?? ''),
-    prodId: dados?.prodId ?? prodList[0]?.id ?? '',
-    qtd:    dados?.qtd    ?? 1,
-    vUnit:  dados?.vUnit  ?? (prodList[0]?.preco ?? 0),
+    itens:  dados?.itens?.length ? dados.itens : [defaultItem()],
     arte:   dados?.arte   ?? '',
     op:     dados?.op     ?? (ops[0]?.id ?? 'bella') as OpId,
     data:   dados?.data   ?? hoje(),
@@ -26,12 +26,20 @@ export function MPed({ dados, ctx, onClose }: Props) {
     id:     dados?.id,
   });
 
-  const total = (Number(f.qtd) || 1) * (Number(f.vUnit) || 0);
+  const total = f.itens.reduce((s, it) => s + (Number(it.qtd) || 0) * (Number(it.vUnit) || 0), 0);
   const upd = <K extends keyof PedidoForm>(k: K, v: PedidoForm[K]) => setF(s => ({ ...s, [k]: v }));
 
-  const setProd = (id: string) => {
-    const p = getProd(id);
-    setF(s => ({ ...s, prodId: id, vUnit: p?.preco ?? s.vUnit }));
+  const updItem = (i: number, patch: Partial<PedItem>) =>
+    setF(s => ({ ...s, itens: s.itens.map((it, idx) => idx === i ? { ...it, ...patch } : it) }));
+
+  const addItem = () => setF(s => ({ ...s, itens: [...s.itens, defaultItem()] }));
+
+  const removeItem = (i: number) =>
+    setF(s => ({ ...s, itens: s.itens.filter((_, idx) => idx !== i) }));
+
+  const setProdItem = (i: number, prodId: string) => {
+    const p = getProd(prodId);
+    updItem(i, { prodId, vUnit: p?.preco ?? 0 });
   };
 
   return (
@@ -49,20 +57,34 @@ export function MPed({ dados, ctx, onClose }: Props) {
         </Field>
       </div>
 
-      <Field label="Produto">
-        <select value={f.prodId} onChange={e => setProd(e.target.value)}>
-          {prodList.map(p => <option key={p.id} value={p.id}>{p.icon} {p.nome} — {fmtR$(p.preco)}</option>)}
-        </select>
-      </Field>
-
       <Field label="Descrição da arte">
-        <input value={f.arte} onChange={e => upd('arte', e.target.value)} placeholder="Ex: Caneca nome Bia + flores rosas" />
+        <input value={f.arte} onChange={e => upd('arte', e.target.value)} placeholder="Ex: Camisetas nome João + foto família" />
       </Field>
 
-      <div className="form-grid form-grid-3">
-        <Field label="Qtd"><input type="number" value={f.qtd} onChange={e => upd('qtd', e.target.value)} /></Field>
-        <Field label="Valor unit."><input type="number" value={f.vUnit} onChange={e => upd('vUnit', e.target.value)} /></Field>
-        <Field label="Sinal pago"><input type="number" value={f.sinal} onChange={e => upd('sinal', e.target.value)} /></Field>
+      <div className="ped-itens-label"><span className="field-label">Produtos do pedido</span></div>
+      <div className="ped-itens">
+        {f.itens.map((item, i) => (
+          <div key={i} className="ped-item-row">
+            <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
+              {prodList.map(p => <option key={p.id} value={p.id}>{p.icon} {p.nome} — {fmtR$(p.preco)}</option>)}
+            </select>
+            <div className="ped-item-nums">
+              <div className="ped-item-field">
+                <span className="ped-item-lbl">Qtd</span>
+                <input type="number" min="1" value={item.qtd} onChange={e => updItem(i, { qtd: Math.max(1, Number(e.target.value) || 1) })} />
+              </div>
+              <div className="ped-item-field">
+                <span className="ped-item-lbl">R$ unit.</span>
+                <input type="number" step="0.01" value={item.vUnit} onChange={e => updItem(i, { vUnit: Number(e.target.value) || 0 })} />
+              </div>
+              <span className="ped-item-sub">{fmtR$(Number(item.qtd) * Number(item.vUnit))}</span>
+            </div>
+            {f.itens.length > 1 && (
+              <button className="ped-item-del" onClick={() => removeItem(i)}>×</button>
+            )}
+          </div>
+        ))}
+        <button className="ped-add-item" onClick={addItem}>+ Adicionar produto</button>
       </div>
 
       <div className="total-box">
@@ -71,15 +93,16 @@ export function MPed({ dados, ctx, onClose }: Props) {
       </div>
 
       <div className="form-grid">
+        <Field label="Sinal pago"><input type="number" value={f.sinal} onChange={e => upd('sinal', e.target.value)} /></Field>
         <Field label="Data do pedido"><input type="date" value={f.data} onChange={e => upd('data', e.target.value)} /></Field>
-        <Field label="Prazo de entrega"><input type="date" value={f.prazo} onChange={e => upd('prazo', e.target.value)} /></Field>
       </div>
+
+      <Field label="Prazo de entrega"><input type="date" value={f.prazo} onChange={e => upd('prazo', e.target.value)} /></Field>
 
       <Field label="Status">
         <div className="status-picker">
           {Object.entries(ST).map(([k, v]) => (
-            <button
-              key={k} type="button"
+            <button key={k} type="button"
               className={`status-opt${f.st === k ? ' active' : ''}`}
               onClick={() => upd('st', k as PedStatus)}
               style={f.st === k ? { background: v.bg, color: v.cor, borderColor: v.cor + '55' } : {}}

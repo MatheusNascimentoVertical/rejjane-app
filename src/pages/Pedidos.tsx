@@ -64,7 +64,7 @@ function WppIcon() {
 
 type CardProps = { p: Pedido; setModal: AppCtx['setModal']; avancar: (id: number) => void; index: number };
 function PedidoCard({ p, setModal, avancar, index }: CardProps) {
-  const prod = getProd(p.prodId);
+  const firstProd = getProd(p.itens?.[0]?.prodId ?? '');
   const stCfg = ST[p.st];
   const dias = diasAte(p.prazo);
   const rest = p.vTotal - p.sinal;
@@ -93,11 +93,16 @@ function PedidoCard({ p, setModal, avancar, index }: CardProps) {
       <div className="ped-stripe" style={{ background: stCfg.cor }} />
       <div className="ped-main">
         <div className="ped-head">
-          <div className="ped-prod-icon" style={{ background: stCfg.bg }}>{prod?.icon}</div>
+          <div className="ped-prod-icon" style={{ background: stCfg.bg }}>{firstProd?.icon ?? '📦'}</div>
           <div className="ped-head-info">
             <div className="ped-num">#{p.id}</div>
             <h3 className="ped-cli">{p.cliNome}</h3>
-            <div className="ped-prod-line">{prod?.nome} · {p.qtd} un</div>
+            <div className="ped-prod-line">
+              {(p.itens ?? []).map((it, idx) => {
+                const pr = getProd(it.prodId);
+                return <span key={idx}>{pr?.nome ?? it.prodId} ×{it.qtd}{idx < (p.itens?.length ?? 0) - 1 ? ' · ' : ''}</span>;
+              })}
+            </div>
           </div>
           <div className="ped-head-r">
             <span className="status-pill" style={{ color: stCfg.cor, background: stCfg.bg }}>{stCfg.label}</span>
