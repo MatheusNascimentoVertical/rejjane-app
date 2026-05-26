@@ -1,13 +1,32 @@
 import { hoje, fmtData, fmtR$ } from '../lib/helpers';
+import { MARCAS } from '../data/constants';
 import type { AppCtx } from '../types';
 
 type Props = { ctx: AppCtx };
 
 export function Caixa({ ctx }: Props) {
-  const { fin, recMes, despMes, setModal, cfg } = ctx;
+  const { fin, recMes, despMes, setModal, peds } = ctx;
   const saldo = recMes - despMes;
   const mes = hoje().slice(0, 7);
-  const ops = cfg.ops ?? [];
+
+  const recPorMarca = MARCAS.map(m => {
+    const total = peds
+      .filter(p => p.data.startsWith(mes) && p.st !== 'cancelado')
+      .reduce((sum, p) => {
+        const contrib = (p.itens ?? []).reduce((s, it) => {
+          const prod = it.prodId;
+          const isMarca = prod.startsWith(m.id.toLowerCase().slice(0, 3));
+          return s + (isMarca ? it.qtd * it.vUnit : 0);
+        }, 0);
+        return sum + contrib;
+      }, 0);
+    const entradas = fin
+      .filter(f => f.tipo === 'entrada' && f.data.startsWith(mes) && f.desc.toLowerCase().includes(m.nome.toLowerCase()))
+      .reduce((a, b) => a + b.valor, 0);
+    return { ...m, total: entradas };
+  });
+
+  const totalEntradas = recPorMarca.reduce((a, b) => a + b.total, 0);
 
   return (
     <div className="caixa">
@@ -27,20 +46,19 @@ export function Caixa({ ctx }: Props) {
         <div className="card-soft">
           <div className="card-head">
             <div>
-              <div className="card-eyebrow">Por operadora</div>
+              <div className="card-eyebrow">Por marca</div>
               <h3 className="card-title">Entradas do mês</h3>
             </div>
           </div>
-          {ops.map(op => {
-            const rec = fin.filter(f => f.tipo === 'entrada' && f.op === op.id && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
-            const pct = recMes > 0 ? (rec / recMes) * 100 : 0;
+          {recPorMarca.map(m => {
+            const pct = totalEntradas > 0 ? (m.total / totalEntradas) * 100 : 0;
             return (
-              <div key={op.id} className="op-row">
+              <div key={m.id} className="op-row">
                 <div className="op-row-head">
-                  <span className="op-name" style={{ color: op.cor }}>✿ {op.nome}</span>
-                  <strong>{fmtR$(rec)}</strong>
+                  <span className="op-name" style={{ color: m.cor }}>{m.icon} {m.nome}</span>
+                  <strong>{fmtR$(m.total)}</strong>
                 </div>
-                <div className="op-bar"><div className="op-bar-fill" style={{ width: pct + '%', background: op.cor }} /></div>
+                <div className="op-bar"><div className="op-bar-fill" style={{ width: pct + '%', background: m.cor }} /></div>
               </div>
             );
           })}

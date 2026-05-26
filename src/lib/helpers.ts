@@ -35,13 +35,13 @@ export function aplicarMsg(template: string, ped: Pedido, cfg: Config): string {
   return (template || '')
     .replace(/{nome}/g, ped.cliNome)
     .replace(/{produto}/g, itensStr || firstProd?.nome || '')
-    .replace(/{arte}/g, ped.arte || '')
     .replace(/{qtd}/g, String(first?.qtd ?? ''))
     .replace(/{vUnit}/g, fmtR$(first?.vUnit ?? 0))
     .replace(/{total}/g, fmtR$(ped.vTotal))
     .replace(/{sinal}/g, fmtR$(ped.sinal))
     .replace(/{restante}/g, fmtR$(rest > 0 ? rest : 0))
     .replace(/{prazo}/g, new Date(ped.prazo + 'T00:00:00').toLocaleDateString('pt-BR'))
+    .replace(/{vencimento}/g, ped.vencimento ? new Date(ped.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : 'a combinar')
     .replace(/{instagram}/g, cfg.instagram || '')
     .replace(/{empresa}/g, cfg.nomeEmpresa || '');
 }

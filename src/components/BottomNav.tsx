@@ -12,8 +12,8 @@ export function BottomNav({ aba, setAba, atrasados }: Props) {
   const navRef = useRef<HTMLElement>(null);
 
   return (
-    <nav className="bella-bn" ref={navRef}>
-      <SlidingIndicator activeKey={aba} containerRef={navRef} color="rgba(201,125,110,0.14)" />
+    <nav className="rj-bn" ref={navRef}>
+      <SlidingIndicator activeKey={aba} containerRef={navRef} color="rgba(233,30,99,0.14)" />
       {NAV.map(([id, label]) => (
         <motion.button
           key={id}

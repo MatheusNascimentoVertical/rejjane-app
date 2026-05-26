@@ -4,16 +4,20 @@ import { ST } from '../data/constants';
 import { aplicarMsg } from '../lib/helpers';
 import type { AppCtx, Pedido, MsgKey } from '../types';
 
-type Props = { ped: Pedido; ctx: AppCtx; onClose: () => void };
+type Props = { ped: Pedido; ctx: AppCtx; onClose: () => void; tipoPadrao?: MsgKey };
+
+const TIPO_LABEL: Partial<Record<MsgKey, string>> = {
+  cobranca: '💰 Cobrança',
+};
 
 function WppIcon() {
   return <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.7-1.4-1.7-1.6-2-.2-.3 0-.4.1-.5.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.5-.6-.5h-.6c-.2 0-.5.1-.7.4-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.2 2.9.2.2 2 3 4.8 4.2 1.7.7 2.3.8 3.1.6.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.7.5 3.4 1.3 4.8L2 22l5.3-1.3c1.4.7 2.9 1.1 4.5 1.1h.2c5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>;
 }
 
-export function MWpp({ ped, ctx, onClose }: Props) {
+export function MWpp({ ped, ctx, onClose, tipoPadrao }: Props) {
   const { cfg, clis } = ctx;
   const msgKeys = Object.keys(cfg.msgs) as MsgKey[];
-  const defaultKey: MsgKey = msgKeys.includes(ped.st as MsgKey) ? ped.st as MsgKey : 'confirmado';
+  const defaultKey: MsgKey = tipoPadrao ?? (msgKeys.includes(ped.st as MsgKey) ? ped.st as MsgKey : 'confirmado');
   const [tipo, setTipo] = useState<MsgKey>(defaultKey);
   const [msg, setMsg] = useState(() => aplicarMsg(cfg.msgs[defaultKey], ped, cfg));
 
@@ -34,7 +38,7 @@ export function MWpp({ ped, ctx, onClose }: Props) {
       <div className="wpp-tipos">
         {msgKeys.map(k => (
           <button key={k} className={`wpp-tipo${tipo === k ? ' active' : ''}`} onClick={() => setTipo(k)}>
-            {ST[k]?.label || k}
+            {TIPO_LABEL[k] || ST[k]?.label || k}
           </button>
         ))}
       </div>

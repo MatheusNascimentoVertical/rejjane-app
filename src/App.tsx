@@ -1,8 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { collection, doc, getDocs, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { db, auth } from './lib/firebase';
-import { CFG0, PRODS, PROX, setProdCache } from './data/constants';
+import { CFG0, CLI0, FIN0, PED0, PRODS, PROX, setProdCache } from './data/constants';
 import type { Prod } from './data/constants';
 import { hoje } from './lib/helpers';
 import { useAuth } from './hooks/useAuth';
@@ -22,6 +23,8 @@ const Config    = lazy(() => import('./pages/Config').then(m => ({ default: m.Co
 import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm, Produto } from './types';
 
 export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
+
+const DEMO = import.meta.env.VITE_DEMO === 'true';
 
 function clean<T extends object>(obj: T): T {
   return Object.fromEntries(
@@ -62,7 +65,7 @@ export default function App() {
   const [fin,  setFinS]    = useState<Lanc[]>([]);
   const [cfg,  setCfgS]    = useState<ConfigType>(CFG0);
   const [prodsS, setProdsS] = useState<Produto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!DEMO);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [fSt,  setFSt]  = useState('todos');
   const [search, setSearch] = useState('');
@@ -70,6 +73,18 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+
+    if (DEMO) {
+      const ps = PRODS as Produto[];
+      setPedsS(PED0);
+      setClisS(CLI0);
+      setFinS(FIN0);
+      setCfgS(CFG0);
+      setProdsS(ps);
+      setProdCache(ps as Prod[]);
+      return;
+    }
+
     Promise.all([
       getDocs(collection(db, 'pedidos')),
       getDocs(collection(db, 'clientes')),
@@ -79,17 +94,17 @@ export default function App() {
     ]).then(([ps, cs, fs, cfgSnap, prSnap]) => {
       setPedsS(ps.docs.map(d => {
         const raw = d.data() as any;
-        if (!raw.itens && raw.prodId) {
+        if (!raw.itens && raw.prodId)
           return { ...raw, itens: [{ prodId: raw.prodId, qtd: raw.qtd ?? 1, vUnit: raw.vUnit ?? 0 }] } as Pedido;
-        }
         return raw as Pedido;
       }));
       setClisS(cs.docs.map(d => d.data() as Cliente));
       setFinS(fs.docs.map(d => d.data() as Lanc));
       if (cfgSnap.exists()) {
-        const cfgData = cfgSnap.data() as ConfigType;
-        if (!cfgData.ops) cfgData.ops = CFG0.ops;
-        setCfgS(cfgData);
+        const loaded = cfgSnap.data() as ConfigType;
+        const merged: ConfigType = { ...CFG0, ...loaded, msgs: { ...CFG0.msgs, ...loaded.msgs } };
+        setCfgS(merged);
+        if (!loaded.msgs?.cobranca) setDoc(doc(db, 'config', 'main'), merged);
       } else {
         setDoc(doc(db, 'config', 'main'), CFG0);
       }
@@ -107,42 +122,60 @@ export default function App() {
   }, [user]);
 
   const setPeds = (upd: React.SetStateAction<Pedido[]>) =>
-    setPedsS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('pedidos', prev, next); return next; });
+    setPedsS(prev => {
+      const next = typeof upd === 'function' ? upd(prev) : upd;
+      if (!DEMO) syncArr('pedidos', prev, next);
+      return next;
+    });
 
   const setClis = (upd: React.SetStateAction<Cliente[]>) =>
-    setClisS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('clientes', prev, next); return next; });
+    setClisS(prev => {
+      const next = typeof upd === 'function' ? upd(prev) : upd;
+      if (!DEMO) syncArr('clientes', prev, next);
+      return next;
+    });
 
   const setFin = (upd: React.SetStateAction<Lanc[]>) =>
-    setFinS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; syncArr('lancamentos', prev, next); return next; });
+    setFinS(prev => {
+      const next = typeof upd === 'function' ? upd(prev) : upd;
+      if (!DEMO) syncArr('lancamentos', prev, next);
+      return next;
+    });
 
   const setCfg = (upd: React.SetStateAction<ConfigType>) =>
-    setCfgS(prev => { const next = typeof upd === 'function' ? upd(prev) : upd; setDoc(doc(db, 'config', 'main'), next); return next; });
+    setCfgS(prev => {
+      const next = typeof upd === 'function' ? upd(prev) : upd;
+      if (!DEMO) setDoc(doc(db, 'config', 'main'), next);
+      return next;
+    });
 
   const setProds = (upd: React.SetStateAction<Produto[]>) =>
     setProdsS(prev => {
       const next = typeof upd === 'function' ? upd(prev) : upd;
-      syncProds(prev, next);
+      if (!DEMO) syncProds(prev, next);
       setProdCache(next as Prod[]);
       return next;
     });
 
   const zerarDados = async () => {
-    const [ps, cs, fs] = await Promise.all([
-      getDocs(collection(db, 'pedidos')),
-      getDocs(collection(db, 'clientes')),
-      getDocs(collection(db, 'lancamentos')),
-    ]);
-    await Promise.all([
-      ...ps.docs.map(d => deleteDoc(d.ref)),
-      ...cs.docs.map(d => deleteDoc(d.ref)),
-      ...fs.docs.map(d => deleteDoc(d.ref)),
-    ]);
+    if (!DEMO) {
+      const [ps, cs, fs] = await Promise.all([
+        getDocs(collection(db, 'pedidos')),
+        getDocs(collection(db, 'clientes')),
+        getDocs(collection(db, 'lancamentos')),
+      ]);
+      await Promise.all([
+        ...ps.docs.map(d => deleteDoc(d.ref)),
+        ...cs.docs.map(d => deleteDoc(d.ref)),
+        ...fs.docs.map(d => deleteDoc(d.ref)),
+      ]);
+    }
     setPedsS([]);
     setClisS([]);
     setFinS([]);
   };
 
-  const sair = () => signOut(auth);
+  const sair = () => DEMO ? window.location.reload() : signOut(auth);
 
   const mes = hoje().slice(0, 7);
   const recMes  = fin.filter(f => f.tipo === 'entrada' && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
@@ -156,7 +189,7 @@ export default function App() {
     if (!prox) return p;
     if (prox === 'entregue') {
       const rest = p.vTotal - p.sinal;
-      if (rest > 0) setFin(f => [{ id: Date.now(), tipo: 'entrada', desc: `Pgto final — ${p.cliNome}`, valor: rest, data: hoje(), op: p.op }, ...f]);
+      if (rest > 0) setFin(f => [{ id: Date.now(), tipo: 'entrada', desc: `Pgto final — ${p.cliNome}`, valor: rest, data: hoje() }, ...f]);
     }
     return { ...p, st: prox };
   }));
@@ -165,24 +198,24 @@ export default function App() {
     const cli  = clis.find(c => c.id === Number(f.cliId));
     const total = f.itens.reduce((s, it) => s + it.qtd * it.vUnit, 0);
     const obj: Pedido = {
-      id:      f.id || Date.now(),
-      cliId:   Number(f.cliId),
-      cliNome: cli?.nome || '',
-      itens:   f.itens,
-      vTotal:  total,
-      arte:    f.arte,
-      op:      f.op,
-      data:    f.data,
-      prazo:   f.prazo,
-      st:      f.st,
-      sinal:   Number(f.sinal) || 0,
-      obs:     f.obs,
+      id:        f.id || Date.now(),
+      cliId:     Number(f.cliId),
+      cliNome:   cli?.nome || '',
+      itens:     f.itens,
+      vTotal:    total,
+      pagamento: f.pagamento,
+      data:      f.data,
+      prazo:     f.prazo,
+      st:        f.st,
+      sinal:     Number(f.sinal) || 0,
+      obs:       f.obs,
+      ...(f.vencimento ? { vencimento: f.vencimento } : {}),
     };
     if (f.id) {
       setPeds(p => p.map(x => x.id === f.id ? obj : x));
     } else {
       setPeds(p => [obj, ...p]);
-      if (obj.sinal > 0) setFin(fn => [{ id: Date.now() + 1, tipo: 'entrada', desc: `Sinal — ${cli?.nome}`, valor: obj.sinal, data: hoje(), op: obj.op }, ...fn]);
+      if (obj.sinal > 0) setFin(fn => [{ id: Date.now() + 1, tipo: 'entrada', desc: `Sinal — ${cli?.nome}`, valor: obj.sinal, data: hoje() }, ...fn]);
     }
     fechar();
   };
@@ -199,39 +232,71 @@ export default function App() {
     zerarDados, sair,
   };
 
-  if (authLoading) return (
-    <div className="bella-loading">
-      <img src="/bella-logo.jpeg" alt="Bella" className="bella-loading-logo" />
-      <p>Carregando…</p>
-    </div>
-  );
-
+  if (authLoading) return <LoadingScreen />;
   if (!user) return <Login />;
-
-  if (loading) return (
-    <div className="bella-loading">
-      <img src="/bella-logo.jpeg" alt="Bella" className="bella-loading-logo" />
-      <p>Carregando…</p>
-    </div>
-  );
+  if (loading) return <LoadingScreen />;
 
   return (
-    <div className="bella-app">
+    <div className="rj-app">
+      {DEMO && (
+        <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999, background: 'var(--rose)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, letterSpacing: '0.05em', opacity: 0.85, pointerEvents: 'none' }}>
+          MODO DEMO
+        </div>
+      )}
       <BackgroundDecor />
       <Sidebar aba={aba} setAba={setAba} atrasados={atrasados} cfg={cfg} />
-      <main className="bella-main">
+      <main className="rj-main">
         <Topbar aba={aba} ctx={ctx} />
         <Suspense fallback={<div className="page-loading" />}>
-          {aba === 'dash'     && <Dashboard ctx={ctx} setAba={setAba} />}
-          {aba === 'pedidos'  && <Pedidos   ctx={ctx} />}
-          {aba === 'clientes' && <Clientes  ctx={ctx} />}
-          {aba === 'catalogo' && <Catalogo  ctx={ctx} />}
-          {aba === 'caixa'    && <Caixa     ctx={ctx} />}
-          {aba === 'config'   && <Config    ctx={ctx} />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={aba}
+              className="page-transition"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            >
+              {aba === 'dash'     && <Dashboard ctx={ctx} setAba={setAba} />}
+              {aba === 'pedidos'  && <Pedidos   ctx={ctx} />}
+              {aba === 'clientes' && <Clientes  ctx={ctx} />}
+              {aba === 'catalogo' && <Catalogo  ctx={ctx} />}
+              {aba === 'caixa'    && <Caixa     ctx={ctx} />}
+              {aba === 'config'   && <Config    ctx={ctx} />}
+            </motion.div>
+          </AnimatePresence>
         </Suspense>
       </main>
       <BottomNav aba={aba} setAba={setAba} atrasados={atrasados} />
       <ModalRoot ctx={ctx} />
+    </div>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div className="rj-loading">
+      <motion.div
+        animate={{ scale: [1, 1.06, 1], rotate: [0, 3, -3, 0] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <img src="/rejjane-logo.jpeg" alt="Rejjanevendas" className="rj-loading-logo" />
+      </motion.div>
+      <motion.div
+        style={{ display: 'flex', gap: 6 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        {[0, 1, 2].map(i => (
+          <motion.span
+            key={i}
+            style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--rose)', display: 'block' }}
+            animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
+          />
+        ))}
+      </motion.div>
     </div>
   );
 }

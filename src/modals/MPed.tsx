@@ -1,33 +1,55 @@
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
+import { MCli } from './MCli';
 import { PRODS, ST, getProd } from '../data/constants';
 import { hoje, dPlus, fmtR$ } from '../lib/helpers';
-import type { AppCtx, PedidoForm, PedItem, PedStatus, OpId } from '../types';
+import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Cliente } from '../types';
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
+const PAG_OPTS: { value: Pagamento; label: string }[] = [
+  { value: 'pix',      label: 'PIX' },
+  { value: 'credito',  label: 'Cartão de crédito' },
+  { value: 'dinheiro', label: 'Dinheiro' },
+];
+
 export function MPed({ dados, ctx, onClose }: Props) {
-  const { clis, salvarPed, cfg } = ctx;
-  const ops = cfg.ops ?? [];
+  const { clis, salvarPed } = ctx;
   const prodList = ctx.prods.length > 0 ? ctx.prods : PRODS;
 
   const defaultItem = (): PedItem => ({ prodId: prodList[0]?.id ?? '', qtd: 1, vUnit: prodList[0]?.preco ?? 0 });
 
+  const [showNovaCli, setShowNovaCli] = useState(false);
+
   const [f, setF] = useState<PedidoForm>({
-    cliId:  dados?.cliId  ?? (clis[0]?.id ?? ''),
-    itens:  dados?.itens?.length ? dados.itens : [defaultItem()],
-    arte:   dados?.arte   ?? '',
-    op:     dados?.op     ?? (ops[0]?.id ?? 'bella') as OpId,
-    data:   dados?.data   ?? hoje(),
-    prazo:  dados?.prazo  ?? dPlus(7),
-    sinal:  dados?.sinal  ?? 0,
-    st:     dados?.st     ?? 'orcamento',
-    obs:    dados?.obs    ?? '',
-    id:     dados?.id,
+    cliId:     dados?.cliId      ?? (clis[0]?.id ?? ''),
+    itens:     dados?.itens?.length ? dados.itens : [defaultItem()],
+    pagamento: dados?.pagamento  ?? 'pix',
+    data:      dados?.data       ?? hoje(),
+    prazo:     dados?.prazo      ?? dPlus(7),
+    sinal:     dados?.sinal      ?? 0,
+    st:        dados?.st         ?? 'orcamento',
+    obs:       dados?.obs        ?? '',
+    id:        dados?.id,
+    vencimento: dados?.vencimento ?? '',
   });
 
   const total = f.itens.reduce((s, it) => s + (Number(it.qtd) || 0) * (Number(it.vUnit) || 0), 0);
   const upd = <K extends keyof PedidoForm>(k: K, v: PedidoForm[K]) => setF(s => ({ ...s, [k]: v }));
+
+  // Wrapped ctx for MCli: auto-selects newly created client after save
+  const cliCtx: AppCtx = {
+    ...ctx,
+    setClis: ((updater: React.SetStateAction<Cliente[]>) => {
+      ctx.setClis(prev => {
+        const next = typeof updater === 'function' ? (updater as (p: Cliente[]) => Cliente[])(prev) : updater;
+        const nova = next.find(c => !prev.find(p => p.id === c.id));
+        if (nova) setF(s => ({ ...s, cliId: String(nova.id) }));
+        return next;
+      });
+    }) as React.Dispatch<React.SetStateAction<Cliente[]>>,
+  };
 
   const updItem = (i: number, patch: Partial<PedItem>) =>
     setF(s => ({ ...s, itens: s.itens.map((it, idx) => idx === i ? { ...it, ...patch } : it) }));
@@ -43,23 +65,27 @@ export function MPed({ dados, ctx, onClose }: Props) {
   };
 
   return (
-    <Sheet title={dados?.id ? 'Editar pedido' : 'Novo pedido'} subtitle="Bella Personalizados" onClose={onClose} wide>
+    <>
+    <Sheet title={dados?.id ? 'Editar pedido' : 'Novo pedido'} subtitle="Rejjanevendas" onClose={onClose} wide>
       <div className="form-grid">
         <Field label="Cliente">
-          <select value={String(f.cliId)} onChange={e => upd('cliId', e.target.value)}>
-            {clis.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
+          <div className="ped-cli-row">
+            <select value={String(f.cliId)} onChange={e => upd('cliId', e.target.value)}>
+              <option value="">Selecionar cliente…</option>
+              {clis.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+            <button type="button" className="btn-nova-cli" onClick={() => setShowNovaCli(true)} title="Cadastrar nova cliente">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Nova
+            </button>
+          </div>
         </Field>
-        <Field label="Operadora">
-          <select value={f.op} onChange={e => upd('op', e.target.value as OpId)}>
-            {ops.map(o => <option key={o.id} value={o.id}>✿ {o.nome}</option>)}
+        <Field label="Forma de pagamento">
+          <select value={f.pagamento} onChange={e => upd('pagamento', e.target.value as Pagamento)}>
+            {PAG_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
       </div>
-
-      <Field label="Descrição da arte">
-        <input value={f.arte} onChange={e => upd('arte', e.target.value)} placeholder="Ex: Camisetas nome João + foto família" />
-      </Field>
 
       <div className="ped-itens-label"><span className="field-label">Produtos do pedido</span></div>
       <div className="ped-itens">
@@ -118,6 +144,27 @@ export function MPed({ dados, ctx, onClose }: Props) {
 
       <Field label="Prazo de entrega"><input type="date" value={f.prazo} onChange={e => upd('prazo', e.target.value)} /></Field>
 
+      {Number(f.sinal) < total && total > 0 && (
+        <div className="venc-wrap">
+          <div className="venc-label">
+            <span>💰</span>
+            <span>Vencimento do pagamento restante</span>
+          </div>
+          <input
+            type="date"
+            className="venc-input"
+            value={f.vencimento || ''}
+            onChange={e => upd('vencimento', e.target.value)}
+            placeholder="Deixe em branco se pago à vista"
+          />
+          {f.vencimento && (
+            <button type="button" className="venc-clear" onClick={() => upd('vencimento', '')}>
+              Remover data de vencimento
+            </button>
+          )}
+        </div>
+      )}
+
       <Field label="Status">
         <div className="status-picker">
           {Object.entries(ST).map(([k, v]) => (
@@ -139,5 +186,11 @@ export function MPed({ dados, ctx, onClose }: Props) {
         <button className="btn-primary" onClick={() => salvarPed(f)}>Salvar pedido</button>
       </div>
     </Sheet>
+    <AnimatePresence>
+      {showNovaCli && (
+        <MCli dados={{}} ctx={cliCtx} onClose={() => setShowNovaCli(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

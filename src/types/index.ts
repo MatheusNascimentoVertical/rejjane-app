@@ -1,15 +1,14 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-export type PedStatus = 'orcamento' | 'confirmado' | 'producao' | 'pronto' | 'entregue' | 'cancelado';
-export type OpId = string;
-export type MsgKey = 'orcamento' | 'confirmado' | 'producao' | 'pronto' | 'entregue';
-
-export type Op = { id: string; nome: string; cor: string };
+export type PedStatus = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'cancelado';
+export type MsgKey = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'cobranca';
+export type Pagamento = 'pix' | 'credito' | 'dinheiro';
 
 export type Produto = {
   id: string;
   nome: string;
   cat: string;
+  marca: string;
   icon: string;
   preco: number;
   precoDe?: number;
@@ -40,13 +39,13 @@ export type Pedido = {
   cliNome: string;
   itens: PedItem[];
   vTotal: number;
-  arte: string;
-  op: OpId;
+  pagamento: Pagamento;
   data: string;
   prazo: string;
   st: PedStatus;
   sinal: number;
   obs: string;
+  vencimento?: string;
 };
 
 export type Lanc = {
@@ -55,7 +54,6 @@ export type Lanc = {
   desc: string;
   valor: number;
   data: string;
-  op: string;
 };
 
 export type Config = {
@@ -65,29 +63,29 @@ export type Config = {
   instagram: string;
   cidade: string;
   msgs: Record<MsgKey, string>;
-  ops: Op[];
 };
 
 export type ModalState =
-  | { tipo: 'ped'; dados?: Partial<Pedido> }
-  | { tipo: 'cli'; dados: Partial<Cliente> }
-  | { tipo: 'fin'; dados: { tipo: 'entrada' | 'saida' } }
-  | { tipo: 'wpp'; ped: Pedido }
-  | { tipo: 'oc'; ped: Pedido }
+  | { tipo: 'ped';  dados?: Partial<Pedido> }
+  | { tipo: 'cli';  dados: Partial<Cliente> }
+  | { tipo: 'fin';  dados: { tipo: 'entrada' | 'saida' } }
+  | { tipo: 'wpp';  ped: Pedido; msgTipo?: MsgKey }
+  | { tipo: 'oc';   ped: Pedido }
   | { tipo: 'prod'; dados?: Partial<Produto> };
 
 export type PedidoForm = {
   id?: number;
   cliId: string | number;
   itens: PedItem[];
-  arte: string;
-  op: OpId;
+  pagamento: Pagamento;
   data: string;
   prazo: string;
   sinal: number | string;
   st: PedStatus;
   obs: string;
+  vencimento?: string;
 };
+
 
 export type AppCtx = {
   peds: Pedido[];

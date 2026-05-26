@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MARCAS, getMarca } from '../data/constants';
 import { fmtR$ } from '../lib/helpers';
 import type { AppCtx } from '../types';
 
@@ -7,21 +8,26 @@ type Props = { ctx: AppCtx };
 
 export function Catalogo({ ctx }: Props) {
   const { prods, peds, setModal } = ctx;
+  const [marcaAtiva, setMarcaAtiva] = useState('Todos');
   const [catAtiva, setCatAtiva] = useState('Todos');
 
   const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
-  const filtered = (catAtiva === 'Todos' ? prods : prods.filter(p => p.cat === catAtiva))
+
+  const filtered = prods
+    .filter(p => marcaAtiva === 'Todos' || p.marca === marcaAtiva)
+    .filter(p => catAtiva === 'Todos' || p.cat === catAtiva)
     .slice()
     .sort((a, b) => vendidos(b.id) - vendidos(a.id));
 
-  const totalEstoque = prods.reduce((a, b) => a + (b.estoque || 0), 0);
+  const totalMarcas = new Set(prods.map(p => p.marca)).size;
   const totalCats = new Set(prods.map(p => p.cat)).size;
 
-  const vendidos = (id: string) =>
-    peds.reduce((sum, p) => {
+  function vendidos(id: string) {
+    return peds.reduce((sum, p) => {
       const item = (p.itens ?? []).find(x => x.prodId === id);
       return sum + (item?.qtd ?? 0);
     }, 0);
+  }
 
   const estoqueLabel = (est: number) => {
     if (est === 0) return { label: 'ESGOTADO', cls: 'red' };
@@ -42,8 +48,8 @@ export function Catalogo({ ctx }: Props) {
             <span className="cat-v2-stat-lbl">Produtos</span>
           </div>
           <div className="cat-v2-stat">
-            <span className="cat-v2-stat-val">{totalEstoque}</span>
-            <span className="cat-v2-stat-lbl">Em estoque</span>
+            <span className="cat-v2-stat-val">{totalMarcas}</span>
+            <span className="cat-v2-stat-lbl">Marcas</span>
           </div>
           <div className="cat-v2-stat">
             <span className="cat-v2-stat-val">{totalCats}</span>
@@ -60,16 +66,41 @@ export function Catalogo({ ctx }: Props) {
         </div>
       </div>
 
-      <div className="cat-filter-row">
-        {cats.map(cat => (
+      <div className="cat-filter-section">
+        <div className="cat-filter-label">Marca</div>
+        <div className="cat-filter-row">
           <button
-            key={cat}
-            className={`cat-pill${catAtiva === cat ? ' active' : ''}`}
-            onClick={() => setCatAtiva(cat)}
+            className={`cat-pill${marcaAtiva === 'Todos' ? ' active' : ''}`}
+            onClick={() => setMarcaAtiva('Todos')}
           >
-            {cat}
+            Todas
           </button>
-        ))}
+          {MARCAS.map(m => (
+            <button
+              key={m.id}
+              className={`cat-pill cat-pill-marca${marcaAtiva === m.id ? ' active' : ''}`}
+              onClick={() => setMarcaAtiva(m.id)}
+              style={marcaAtiva === m.id ? { background: m.bg, color: m.cor, borderColor: m.cor + '55' } : {}}
+            >
+              {m.icon} {m.nome}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="cat-filter-section">
+        <div className="cat-filter-label">Categoria</div>
+        <div className="cat-filter-row">
+          {cats.map(cat => (
+            <button
+              key={cat}
+              className={`cat-pill${catAtiva === cat ? ' active' : ''}`}
+              onClick={() => setCatAtiva(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="cat-grid-v2">
@@ -77,6 +108,7 @@ export function Catalogo({ ctx }: Props) {
           {filtered.map((p, i) => {
             const sold = vendidos(p.id);
             const est  = estoqueLabel(p.estoque ?? 0);
+            const marca = getMarca(p.marca);
             return (
               <motion.div
                 key={p.id}
@@ -99,6 +131,11 @@ export function Catalogo({ ctx }: Props) {
                   </div>
                 </div>
                 <div className="cat-card-body">
+                  {marca && (
+                    <div className="cat-marca-badge" style={{ color: marca.cor, background: marca.bg }}>
+                      {marca.icon} {marca.nome}
+                    </div>
+                  )}
                   <div className="cat-cat-chip">{p.cat}</div>
                   <div className="cat-card-name">{p.nome}</div>
                   <div className="cat-price-row">

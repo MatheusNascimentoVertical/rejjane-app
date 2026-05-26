@@ -5,7 +5,7 @@ import { NavIcon } from './NavIcon';
 import { NAV } from '../data/constants';
 import type { Config, Pedido } from '../types';
 import type { Aba } from '../App';
-const bellaLogo = '/bella-logo.jpeg';
+const rjLogo = '/rejjane-logo.jpeg';
 
 type Props = { aba: Aba; setAba: (a: Aba) => void; atrasados: Pedido[]; cfg: Config };
 
@@ -13,13 +13,13 @@ export function Sidebar({ aba, setAba, atrasados, cfg }: Props) {
   const navRef = useRef<HTMLElement | null>(null);
 
   return (
-    <aside className="bella-sb">
+    <aside className="rj-sb">
       <div className="sb-logo">
         <div className="sb-logo-frame">
-          <img src={bellaLogo} alt="Bella" />
+          <img src={rjLogo} alt="Rejjanevendas" />
         </div>
         <div className="sb-tag">
-          <span className="ribbon-line" /><span>desde 2023</span><span className="ribbon-line" />
+          <span className="ribbon-line" /><span>{cfg.slogan || 'Beleza • Casa • Cuidado • Você'}</span><span className="ribbon-line" />
         </div>
       </div>
 
@@ -45,9 +45,9 @@ export function Sidebar({ aba, setAba, atrasados, cfg }: Props) {
 
       <div className="sb-foot">
         <div className="sb-foot-card">
-          <div className="sb-foot-icon">✿</div>
+          <div className="sb-foot-icon">🌸</div>
           <div>
-            <div className="sb-foot-title">Bom dia, Bella!</div>
+            <div className="sb-foot-title">Olá, Rejane!</div>
             <div className="sb-foot-sub">{new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}</div>
           </div>
         </div>

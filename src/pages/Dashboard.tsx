@@ -5,15 +5,15 @@ import { PRODS, ST, getProd } from '../data/constants';
 import { hoje, fmtR$, fmtData, diasAte } from '../lib/helpers';
 import type { AppCtx } from '../types';
 import type { Aba } from '../App';
-const bellaLogo = '/bella-logo.jpeg';
+const rjLogo = '/rejjane-logo.jpeg';
 
 type Props = { ctx: AppCtx; setAba: (a: Aba) => void };
 
 export function Dashboard({ ctx, setAba }: Props) {
   const { ativos, atrasados, peds, fin, recMes, despMes, prods } = ctx;
   const saldo = recMes - despMes;
-  const producaoAgora = peds.filter(p => p.st === 'producao').length;
-  const prontos = peds.filter(p => p.st === 'pronto').length;
+  const encomendados = peds.filter(p => p.st === 'encomendado').length;
+  const chegou = peds.filter(p => p.st === 'chegou').length;
   const semanaPeds = peds.filter(p => {
     const d = new Date(p.data + 'T00:00:00');
     const w = new Date(); w.setDate(w.getDate() - 7);
@@ -50,18 +50,18 @@ export function Dashboard({ ctx, setAba }: Props) {
       </AnimatePresence>
 
       <div className="stat-row">
-        <StatCard index={0} label="Em aberto"   value={ativos.length}    sub="pedidos ativos"      tone="rose" />
-        <StatCard index={1} label="Em produção" value={producaoAgora}    sub="agora na bancada"    tone="peach" />
-        <StatCard index={2} label="Prontos"     value={prontos}          sub="aguardando retirada" tone="sage" />
-        <StatCard index={3} label="Esta semana" value={semanaPeds}       sub="pedidos novos"       tone="mauve" />
+        <StatCard index={0} label="Em aberto"    value={ativos.length}  sub="pedidos ativos"       tone="rose" />
+        <StatCard index={1} label="Encomendados" value={encomendados}   sub="aguardando chegada"   tone="peach" />
+        <StatCard index={2} label="Chegou!"      value={chegou}         sub="prontos para entrega" tone="sage" />
+        <StatCard index={3} label="Esta semana"  value={semanaPeds}     sub="pedidos novos"        tone="mauve" />
       </div>
 
       <div className="dash-grid">
         <section className="card-soft fila">
           <div className="card-head">
             <div>
-              <div className="card-eyebrow">Bancada</div>
-              <h3 className="card-title">Fila de produção</h3>
+              <div className="card-eyebrow">Acompanhamento</div>
+              <h3 className="card-title">Pedidos em andamento</h3>
             </div>
             <button className="btn-ghost-sm" onClick={() => setAba('pedidos')}>Ver tudo</button>
           </div>
@@ -88,7 +88,7 @@ export function Dashboard({ ctx, setAba }: Props) {
                 </div>
               );
             })}
-            {ativos.length === 0 && <div style={{ padding: '20px 0', color: 'var(--ink-mute)', textAlign: 'center' }}>Nenhum pedido ativo ✿</div>}
+            {ativos.length === 0 && <div style={{ padding: '20px 0', color: 'var(--ink-mute)', textAlign: 'center' }}>Nenhum pedido ativo 🌸</div>}
           </div>
         </section>
 
@@ -129,13 +129,13 @@ function HeroCard({ ctx, setAba }: Props) {
   const data = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
     <motion.div className="hero-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, type: 'spring' }}>
-      <div className="hero-watermark"><img src={bellaLogo} alt="" /></div>
+      <div className="hero-watermark"><img src={rjLogo} alt="" /></div>
       <div className="hero-body">
         <div className="hero-eyebrow">{data}</div>
-        <h2 className="hero-title">{sauda}, <span className="script">Bella</span> ✿</h2>
+        <h2 className="hero-title">{sauda}, <span className="script">Rejane</span> 🌸</h2>
         <p className="hero-sub">
           Você tem <strong>{ctx.ativos.length}</strong> pedidos em andamento e{' '}
-          <strong>{ctx.peds.filter(p => p.st === 'pronto').length}</strong> prontos para entrega.
+          <strong>{ctx.peds.filter(p => p.st === 'chegou').length}</strong> prontos para entrega.
         </p>
         <div className="hero-actions">
           <motion.button className="btn-primary" onClick={() => ctx.setModal({ tipo: 'ped' })} whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.96 }}>

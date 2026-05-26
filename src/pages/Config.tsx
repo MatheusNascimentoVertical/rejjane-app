@@ -1,4 +1,4 @@
-import type { AppCtx, MsgKey, Op } from '../types';
+import type { AppCtx, MsgKey } from '../types';
 
 type Props = { ctx: AppCtx };
 
@@ -12,33 +12,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const MSG_LABELS: [MsgKey, string][] = [
-  ['orcamento',  'Envio de orçamento'],
-  ['confirmado', 'Pedido confirmado'],
-  ['producao',   'Em produção'],
-  ['pronto',     'Pronto para entrega'],
-  ['entregue',   'Entregue / pós-venda'],
+  ['orcamento',   'Envio de orçamento'],
+  ['confirmado',  'Pedido confirmado'],
+  ['encomendado', 'Pedido encomendado'],
+  ['chegou',      'Chegou — pronto para entrega'],
+  ['entregue',    'Entregue / pós-venda'],
+  ['cobranca',    '💰 Cobrança de pagamento'],
 ];
 
 export function Config({ ctx }: Props) {
   const { cfg, setCfg, zerarDados, sair } = ctx;
   const upd = (k: string, v: string) => setCfg(c => ({ ...c, [k]: v }));
-
-  const ops = cfg.ops ?? [];
-
-  const updateOp = (idx: number, field: keyof Op, value: string) => {
-    const next = ops.map((o, i) => i === idx ? { ...o, [field]: value } : o);
-    setCfg(c => ({ ...c, ops: next }));
-  };
-
-  const removeOp = (idx: number) => {
-    const next = ops.filter((_, i) => i !== idx);
-    setCfg(c => ({ ...c, ops: next }));
-  };
-
-  const addOp = () => {
-    const newOp: Op = { id: `op_${Date.now()}`, nome: 'Nova operadora', cor: '#c97d6e' };
-    setCfg(c => ({ ...c, ops: [...(c.ops ?? []), newOp] }));
-  };
 
   return (
     <div className="config">
@@ -53,41 +37,7 @@ export function Config({ ctx }: Props) {
           <Field label="WhatsApp"><input value={cfg.telefone} onChange={e => upd('telefone', e.target.value)} /></Field>
           <Field label="Instagram"><input value={cfg.instagram} onChange={e => upd('instagram', e.target.value)} /></Field>
         </div>
-        <Field label="Cidade"><input value={cfg.cidade} onChange={e => upd('cidade', e.target.value)} /></Field>
-      </section>
-
-      <section className="card-soft">
-        <div className="card-eyebrow">Equipe</div>
-        <h3 className="card-title">Operadoras ativas</h3>
-        <div className="ops-edit-grid">
-          {ops.map((op, idx) => (
-            <div key={op.id} className="op-edit-card">
-              <input
-                type="color"
-                className="op-color-dot"
-                value={op.cor}
-                onChange={e => updateOp(idx, 'cor', e.target.value)}
-                title="Cor"
-              />
-              <input
-                value={op.nome}
-                onChange={e => updateOp(idx, 'nome', e.target.value)}
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 14, color: 'var(--ink)', fontFamily: 'inherit' }}
-              />
-              <button
-                type="button"
-                className="btn-ghost-sm"
-                onClick={() => removeOp(idx)}
-                style={{ color: '#b85050', padding: '4px 8px' }}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          <button type="button" className="op-add-btn" onClick={addOp}>
-            + Adicionar operadora
-          </button>
-        </div>
+        <Field label="Cidade / Região"><input value={cfg.cidade} onChange={e => upd('cidade', e.target.value)} /></Field>
       </section>
 
       <section className="card-soft">
@@ -95,7 +45,7 @@ export function Config({ ctx }: Props) {
         <h3 className="card-title">Mensagens prontas WhatsApp</h3>
         <p className="config-hint">
           Variáveis:{' '}
-          {['{nome}','{produto}','{total}','{restante}','{prazo}','{sinal}','{arte}','{qtd}'].map(v => (
+          {['{nome}','{produto}','{total}','{restante}','{prazo}','{sinal}','{qtd}','{vUnit}','{instagram}'].map(v => (
             <code key={v}>{v}</code>
           ))}
         </p>

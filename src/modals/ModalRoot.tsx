@@ -18,7 +18,7 @@ export function ModalRoot({ ctx }: Props) {
           {modal.tipo === 'ped'  && <MPed      dados={modal.dados} ctx={ctx} onClose={fechar} />}
           {modal.tipo === 'cli'  && <MCli      dados={modal.dados} ctx={ctx} onClose={fechar} />}
           {modal.tipo === 'fin'  && <MFin      dados={modal.dados} ctx={ctx} onClose={fechar} />}
-          {modal.tipo === 'wpp'  && <MWpp      ped={modal.ped}     ctx={ctx} onClose={fechar} />}
+          {modal.tipo === 'wpp'  && <MWpp      ped={modal.ped}     ctx={ctx} onClose={fechar} tipoPadrao={modal.msgTipo} />}
           {modal.tipo === 'oc'   && <MOrc      ped={modal.ped}     ctx={ctx} onClose={fechar} />}
           {modal.tipo === 'prod' && <MCatalogo dados={modal.dados} ctx={ctx} onClose={fechar} />}
         </div>

@@ -1,7 +1,13 @@
 import { getProd } from '../data/constants';
 import { fmtDataLong, fmtR$ } from '../lib/helpers';
-import type { AppCtx, Pedido } from '../types';
-const bellaLogo = '/bella-logo.jpeg';
+import type { AppCtx, Pedido, Pagamento } from '../types';
+const rjLogo = '/rejjane-logo.jpeg';
+
+const PAG_LABEL: Record<Pagamento, string> = {
+  pix:      'PIX',
+  credito:  'Cartão de crédito',
+  dinheiro: 'Dinheiro',
+};
 
 type Props = { ped: Pedido; ctx: AppCtx; onClose: () => void };
 
@@ -23,7 +29,7 @@ export function MOrc({ ped, ctx, onClose }: Props) {
       <div id="orc-doc" className="orc-doc">
         <header className="orc-head">
           <div className="orc-head-l">
-            <img src={bellaLogo} className="orc-logo" alt="Bella" />
+            <img src={rjLogo} className="orc-logo" alt="Rejjanevendas" />
             <div>
               <div className="orc-brand">{cfg.nomeEmpresa}</div>
               <div className="orc-tag">{cfg.slogan}</div>
@@ -48,11 +54,15 @@ export function MOrc({ ped, ctx, onClose }: Props) {
             <div className="orc-section-eyebrow">Entrega prevista</div>
             <div className="orc-client-name">{fmtDataLong(ped.prazo)}</div>
           </div>
+          <div>
+            <div className="orc-section-eyebrow">Pagamento</div>
+            <div className="orc-client-name">{PAG_LABEL[ped.pagamento] ?? ped.pagamento}</div>
+          </div>
         </div>
 
         <table className="orc-tbl">
           <thead>
-            <tr><th>Descrição da arte</th><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>
+            <tr><th>Produto</th><th>Marca</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>
           </thead>
           <tbody>
             {(ped.itens ?? []).map((item, i) => {
@@ -60,8 +70,8 @@ export function MOrc({ ped, ctx, onClose }: Props) {
               const sub = item.qtd * item.vUnit;
               return (
                 <tr key={i}>
-                  {i === 0 && <td rowSpan={ped.itens?.length ?? 1}>{ped.arte}</td>}
                   <td>{prod?.icon} {prod?.nome}</td>
+                  <td>{prod?.marca ?? '—'}</td>
                   <td className="ctr">{item.qtd}</td>
                   <td className="rt">{fmtR$(item.vUnit)}</td>
                   <td className="rt strong">{fmtR$(sub)}</td>
@@ -87,9 +97,9 @@ export function MOrc({ ped, ctx, onClose }: Props) {
         </div>
 
         <footer className="orc-foot">
-          <span>♡</span>
+          <span>🌸</span>
           <span>{cfg.nomeEmpresa} · {cfg.instagram} · {cfg.cidade}</span>
-          <span>♡</span>
+          <span>🌸</span>
         </footer>
       </div>
     </div>

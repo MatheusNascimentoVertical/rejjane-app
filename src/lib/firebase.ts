@@ -4,13 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCYSUVIFOTYadjTHCe7GN2q5um3ut9qg7U',
-  authDomain: 'bellapersonalizados-1a79f.firebaseapp.com',
-  projectId: 'bellapersonalizados-1a79f',
-  storageBucket: 'bellapersonalizados-1a79f.firebasestorage.app',
-  messagingSenderId: '685844589804',
-  appId: '1:685844589804:web:f0d324dbd66bfa90a149c9',
-  measurementId: 'G-92GLYWLP4M',
+  apiKey: 'AIzaSyD_wiUFqviJmW6f6rDIi80UTokYaSGb-Ho',
+  authDomain: 'rejjanevendas-9d679.firebaseapp.com',
+  projectId: 'rejjanevendas-9d679',
+  storageBucket: 'rejjanevendas-9d679.firebasestorage.app',
+  messagingSenderId: '367312823145',
+  appId: '1:367312823145:web:0fc87162190caee114d3f8',
+  measurementId: 'G-5WW8V2MWKX',
 };
 
 const app = initializeApp(firebaseConfig);

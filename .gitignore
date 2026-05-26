@@ -4,3 +4,12 @@ dist
 .env.local
 .DS_Store
 *.tsbuildinfo
+
+# scripts sensíveis — nunca commitar
+scripts/serviceAccount.json
+scripts/urls_cloudinary.json
+
+# fotos de produtos — já hospedadas no Cloudinary
+public/produtos/
+
+.vercel

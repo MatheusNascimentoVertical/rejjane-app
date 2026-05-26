@@ -2,11 +2,17 @@ import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidingIndicator } from '../components/SlidingIndicator';
 import { useSwipe } from '../hooks/useSwipe';
-import { ST, PROX, OPS, getProd } from '../data/constants';
+import { ST, PROX, getProd } from '../data/constants';
 import { hoje, fmtR$, fmtData, diasAte } from '../lib/helpers';
-import type { AppCtx, Pedido } from '../types';
+import type { AppCtx, Pedido, Pagamento } from '../types';
 
 type Props = { ctx: AppCtx };
+
+const PAG_LABEL: Record<Pagamento, string> = {
+  pix:      'PIX',
+  credito:  'Cartão',
+  dinheiro: 'Dinheiro',
+};
 
 export function Pedidos({ ctx }: Props) {
   const { peds, fSt, setFSt, search, setModal, avancar } = ctx;
@@ -14,7 +20,7 @@ export function Pedidos({ ctx }: Props) {
 
   const filt = peds
     .filter(p => fSt === 'todos' || p.st === fSt)
-    .filter(p => !search || p.cliNome.toLowerCase().includes(search.toLowerCase()) || p.arte.toLowerCase().includes(search.toLowerCase()) || String(p.id).includes(search))
+    .filter(p => !search || p.cliNome.toLowerCase().includes(search.toLowerCase()) || String(p.id).includes(search))
     .sort((a, b) => a.prazo.localeCompare(b.prazo));
 
   return (
@@ -44,7 +50,7 @@ export function Pedidos({ ctx }: Props) {
       <div className="pedidos-list">
         {filt.length === 0 && (
           <div className="empty-state">
-            <div className="empty-glyph">✿</div>
+            <div className="empty-glyph">🌸</div>
             <p>Nenhum pedido encontrado</p>
           </div>
         )}
@@ -68,7 +74,6 @@ function PedidoCard({ p, setModal, avancar, index }: CardProps) {
   const stCfg = ST[p.st];
   const dias = diasAte(p.prazo);
   const rest = p.vTotal - p.sinal;
-  const op = OPS.find(o => o.id === p.op);
 
   const swipeRef = useSwipe({
     onSwipeLeft:  () => setModal({ tipo: 'wpp', ped: p }),
@@ -116,17 +121,32 @@ function PedidoCard({ p, setModal, avancar, index }: CardProps) {
           </div>
         </div>
 
-        <div className="ped-arte">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c97d6e" strokeWidth="2"><path d="M12 2 9 9l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"/></svg>
-          <span>{p.arte}</span>
-        </div>
-
         <div className="ped-vals">
           <div className="ped-val"><span className="val-label">Total</span><strong>{fmtR$(p.vTotal)}</strong></div>
           <div className="ped-val"><span className="val-label">Sinal</span><strong className="sage">{fmtR$(p.sinal)}</strong></div>
           <div className="ped-val"><span className="val-label">Restante</span><strong className={rest > 0 ? 'peach' : ''}>{fmtR$(rest)}</strong></div>
-          <div className="ped-val"><span className="val-label">Operadora</span><strong style={{ color: op?.cor }}>✨ {op?.nome}</strong></div>
+          <div className="ped-val">
+            <span className="val-label">Pagamento</span>
+            <span className={`pag-badge pag-${p.pagamento}`}>{PAG_LABEL[p.pagamento] ?? p.pagamento}</span>
+          </div>
         </div>
+
+        {rest > 0 && p.vencimento && (() => {
+          const dv = diasAte(p.vencimento);
+          return (
+            <div className={`ped-vencimento${dv < 0 ? ' venc-late' : dv <= 3 ? ' venc-warn' : ''}`}>
+              <span className="venc-icon">{dv < 0 ? '🔴' : dv <= 3 ? '🟡' : '🟢'}</span>
+              <span>
+                {dv < 0
+                  ? `Pagamento vencido há ${Math.abs(dv)} dia${Math.abs(dv) > 1 ? 's' : ''}`
+                  : dv === 0
+                    ? 'Vence hoje!'
+                    : `Vence em ${dv} dia${dv > 1 ? 's' : ''}`}
+                {' — '}<strong>{fmtData(p.vencimento)}</strong>
+              </span>
+            </div>
+          );
+        })()}
 
         {p.obs && <div className="ped-obs">💬 {p.obs}</div>}
 
@@ -138,6 +158,9 @@ function PedidoCard({ p, setModal, avancar, index }: CardProps) {
           )}
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'ped', dados: { ...p } })} whileTap={{ scale: 0.94 }}>Editar</motion.button>
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'wpp', ped: p })} whileTap={{ scale: 0.94 }}><WppIcon /> WhatsApp</motion.button>
+          {rest > 0 && (
+            <motion.button className="btn-cobrar-sm" onClick={() => setModal({ tipo: 'wpp', ped: p, msgTipo: 'cobranca' })} whileTap={{ scale: 0.94 }}>💰 Cobrar</motion.button>
+          )}
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'oc', ped: p })} whileTap={{ scale: 0.94 }}>📄 Orçamento</motion.button>
         </div>
       </div>

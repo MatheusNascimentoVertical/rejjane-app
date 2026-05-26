@@ -12,7 +12,7 @@ export function Topbar({ aba, ctx }: Props) {
   return (
     <div className="topbar">
       <div className="topbar-l">
-        <div className="topbar-eyebrow">Bella Personalizados</div>
+        <div className="topbar-eyebrow">Rejjanevendas</div>
         <h1 className="topbar-title">{titulos[aba]}</h1>
       </div>
       <div className="topbar-r">

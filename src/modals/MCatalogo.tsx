@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { uploadFoto } from '../lib/cloudinary';
 import { Sheet, Field } from './Sheet';
+import { MARCAS } from '../data/constants';
 import type { AppCtx, Produto } from '../types';
 
 type Props = { dados?: Partial<Produto>; ctx: AppCtx; onClose: () => void };
 
-const CATS_DEFAULT = ['Camisetas', 'Canecas', 'Decoração', 'Kits'];
+const CATS_DEFAULT = ['Beleza', 'Casa', 'Cuidado', 'Conforto'];
 
 export function MCatalogo({ dados, ctx, onClose }: Props) {
   const { prods, setProds } = ctx;
@@ -14,6 +15,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   const existCats = Array.from(new Set([...CATS_DEFAULT, ...prods.map(p => p.cat)]));
 
   const [nome,     setNome]     = useState(dados?.nome     ?? '');
+  const [marca,    setMarca]    = useState(dados?.marca    ?? MARCAS[0].id);
   const [cat,      setCat]      = useState(dados?.cat      ?? existCats[0]);
   const [catCustom, setCatCustom] = useState('');
   const [preco,    setPreco]    = useState(String(dados?.preco    ?? ''));
@@ -59,6 +61,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
       const prod: Produto = {
         id,
         nome: nome.trim(),
+        marca,
         cat: catFinal,
         icon,
         preco: parseFloat(preco) || 0,
@@ -111,23 +114,29 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
 
       <div className="form-grid">
         <Field label="Nome">
-          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Caneca Cerâmica" />
+          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Perfume Lily Flower" />
         </Field>
-        <Field label="Categoria">
-          <select value={cat} onChange={e => setCat(e.target.value)}>
-            {existCats.map(c => <option key={c} value={c}>{c}</option>)}
-            <option value="__custom__">+ Nova categoria</option>
+        <Field label="Marca">
+          <select value={marca} onChange={e => setMarca(e.target.value)}>
+            {MARCAS.map(m => <option key={m.id} value={m.id}>{m.icon} {m.nome}</option>)}
           </select>
-          {cat === '__custom__' && (
-            <input
-              value={catCustom}
-              onChange={e => setCatCustom(e.target.value)}
-              placeholder="Nome da nova categoria"
-              style={{ marginTop: 6 }}
-            />
-          )}
         </Field>
       </div>
+
+      <Field label="Categoria">
+        <select value={cat} onChange={e => setCat(e.target.value)}>
+          {existCats.map(c => <option key={c} value={c}>{c}</option>)}
+          <option value="__custom__">+ Nova categoria</option>
+        </select>
+        {cat === '__custom__' && (
+          <input
+            value={catCustom}
+            onChange={e => setCatCustom(e.target.value)}
+            placeholder="Nome da nova categoria"
+            style={{ marginTop: 6 }}
+          />
+        )}
+      </Field>
 
       <div className="form-grid form-grid-3">
         <Field label="Preço (R$)">

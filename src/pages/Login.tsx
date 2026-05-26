@@ -2,8 +2,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-
-const LOGO = '/bella-logo.jpeg';
+import { Avatar3D } from '../components/Avatar3D';
 
 function EnvIcon() {
   return (
@@ -128,7 +127,7 @@ export function Login() {
           animate={{ x: f.x, y: f.y, rotate: f.rotate }}
           transition={{ duration: 5 + i * 1.2, repeat: Infinity, ease: 'easeInOut' }}
         >
-          ✿
+          🌸
         </motion.div>
       ))}
 
@@ -143,13 +142,11 @@ export function Login() {
           className="login-head"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.28, duration: 0.4 }}
+          transition={{ delay: 0.18, duration: 0.5 }}
         >
-          <div className="login-logo-wrap">
-            <img src={LOGO} alt="Bella" className="login-logo" />
-          </div>
-          <div className="login-brand">Bella Personalizados</div>
-          <div className="login-brand-sub">Sistema de Gestão</div>
+          <Avatar3D />
+          <div className="login-brand">Rejjanevendas</div>
+          <div className="login-brand-sub">Beleza • Casa • Cuidado • Você</div>
         </motion.div>
 
         <motion.div
@@ -245,7 +242,7 @@ export function Login() {
             className="login-btn"
             onClick={entrar}
             disabled={loading}
-            whileHover={{ translateY: -2, boxShadow: '0 8px 24px rgba(168,90,79,0.35)' }}
+            whileHover={{ translateY: -2, boxShadow: '0 8px 24px rgba(233,30,99,0.35)' }}
             whileTap={{ scale: 0.97 }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
