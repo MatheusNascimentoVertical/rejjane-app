@@ -4,7 +4,7 @@ import { SlidingIndicator } from '../components/SlidingIndicator';
 import { useSwipe } from '../hooks/useSwipe';
 import { ST, PROX, getProd } from '../data/constants';
 import { hoje, fmtR$, fmtData, diasAte } from '../lib/helpers';
-import type { AppCtx, Pedido, Pagamento } from '../types';
+import type { AppCtx, Pedido, Pagamento, Parcela } from '../types';
 
 type Props = { ctx: AppCtx };
 
@@ -132,7 +132,34 @@ function PedidoCard({ p, setModal, avancar, setPeds, index }: CardProps) {
           </div>
         </div>
 
-        {rest > 0 && p.vencimento && (() => {
+        {rest > 0 && p.parcelas && p.parcelas.length > 0 ? (
+          <div className="parcelas-card">
+            <div className="parcelas-card-title">📅 Parcelas</div>
+            {p.parcelas.map((parc, i) => {
+              const dv = diasAte(parc.data);
+              return (
+                <div key={i} className={`parcela-card-row${parc.pago ? ' pago' : dv < 0 ? ' venc-late' : dv <= 3 ? ' venc-warn' : ''}`}>
+                  <span className="parc-card-icon">{parc.pago ? '✅' : dv < 0 ? '🔴' : dv <= 3 ? '🟡' : '🟢'}</span>
+                  <span className="parc-card-info">
+                    <strong>{fmtR$(parc.valor)}</strong>
+                    <span> — {fmtData(parc.data)}</span>
+                    {!parc.pago && dv < 0 && <span className="parc-late"> ({Math.abs(dv)}d atrasado)</span>}
+                  </span>
+                  {!parc.pago && (
+                    <div className="parc-card-actions">
+                      <motion.button className="btn-cobrar-sm" style={{ fontSize: 11, padding: '4px 8px' }}
+                        onClick={() => setModal({ tipo: 'wpp', ped: { ...p, vTotal: parc.valor, sinal: 0, vencimento: parc.data }, msgTipo: 'cobranca' })}
+                        whileTap={{ scale: 0.94 }}>💰</motion.button>
+                      <motion.button className="btn-soft-sm" style={{ fontSize: 11, padding: '4px 8px' }}
+                        onClick={() => setPeds(ps => ps.map(x => x.id !== p.id ? x : { ...x, parcelas: x.parcelas?.map((pc, idx) => idx === i ? { ...pc, pago: true } : pc) }))}
+                        whileTap={{ scale: 0.94 }}>✓ Pago</motion.button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : rest > 0 && p.vencimento ? (() => {
           const dv = diasAte(p.vencimento);
           return (
             <div className={`ped-vencimento${dv < 0 ? ' venc-late' : dv <= 3 ? ' venc-warn' : ''}`}>
@@ -147,7 +174,7 @@ function PedidoCard({ p, setModal, avancar, setPeds, index }: CardProps) {
               </span>
             </div>
           );
-        })()}
+        })() : null}
 
         {p.obs && <div className="ped-obs">💬 {p.obs}</div>}
 

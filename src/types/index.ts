@@ -33,6 +33,12 @@ export type PedItem = {
   vUnit: number;
 };
 
+export type Parcela = {
+  valor: number;
+  data: string;
+  pago: boolean;
+};
+
 export type Pedido = {
   id: number;
   cliId: number;
@@ -46,6 +52,7 @@ export type Pedido = {
   sinal: number;
   obs: string;
   vencimento?: string;
+  parcelas?: Parcela[];
 };
 
 export type Lanc = {
@@ -84,6 +91,7 @@ export type PedidoForm = {
   st: PedStatus;
   obs: string;
   vencimento?: string;
+  parcelas?: Parcela[];
 };
 
 

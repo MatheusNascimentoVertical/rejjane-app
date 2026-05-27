@@ -210,6 +210,7 @@ export default function App() {
       sinal:     Number(f.sinal) || 0,
       obs:       f.obs,
       ...(f.vencimento ? { vencimento: f.vencimento } : {}),
+      ...(f.parcelas?.length ? { parcelas: f.parcelas } : {}),
     };
     if (f.id) {
       setPeds(p => p.map(x => x.id === f.id ? obj : x));
