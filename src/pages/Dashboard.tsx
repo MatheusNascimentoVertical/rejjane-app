@@ -132,7 +132,7 @@ function HeroCard({ ctx, setAba }: Props) {
       <div className="hero-watermark"><img src={rjLogo} alt="" /></div>
       <div className="hero-body">
         <div className="hero-eyebrow">{data}</div>
-        <h2 className="hero-title">{sauda}, <span className="script">Rejane</span> 🌸</h2>
+        <h2 className="hero-title">{sauda}, <span className="script">Paizão</span> 😎</h2>
         <p className="hero-sub">
           Você tem <strong>{ctx.ativos.length}</strong> pedidos em andamento e{' '}
           <strong>{ctx.peds.filter(p => p.st === 'chegou').length}</strong> prontos para entrega.

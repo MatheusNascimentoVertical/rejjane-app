@@ -19,41 +19,41 @@ export type Prod = {
 export type StCfg = { label: string; cor: string; bg: string };
 
 export const MARCAS: { id: string; nome: string; cor: string; bg: string; icon: string }[] = [
-  { id: 'Tupperware', nome: 'Tupperware', cor: '#00838f', bg: '#e0f7fa', icon: '🏠' },
-  { id: 'Avon',       nome: 'Avon',       cor: '#546e7a', bg: '#eceff1', icon: '🌹' },
-  { id: 'Boticário',  nome: 'Boticário',  cor: '#2e7d32', bg: '#e8f5e9', icon: '🌿' },
-  { id: 'Eudora',     nome: 'Eudora',     cor: '#6a1b9a', bg: '#f3e5f5', icon: '💜' },
-  { id: 'Natura',     nome: 'Natura',     cor: '#795548', bg: '#efebe9', icon: '🌱' },
+  { id: 'Feminino',   nome: 'Feminino',   cor: '#c2185b', bg: '#fce4ec', icon: '👗' },
+  { id: 'Masculino',  nome: 'Masculino',  cor: '#1565c0', bg: '#e3f2fd', icon: '👕' },
+  { id: 'Acessórios', nome: 'Acessórios', cor: '#6a1b9a', bg: '#f3e5f5', icon: '👜' },
+  { id: 'Calçados',   nome: 'Calçados',   cor: '#4e342e', bg: '#efebe9', icon: '👟' },
+  { id: 'Infantil',   nome: 'Infantil',   cor: '#f57f17', bg: '#fff8e1', icon: '🧒' },
 ];
 
 export const getMarca = (id: string) => MARCAS.find(m => m.id === id);
 
 export const PRODS: Prod[] = [
-  // Tupperware
-  { id: 'tup_jarra',  nome: 'Jarra Facetada 1,5L',    marca: 'Tupperware', preco: 85,  icon: '🫙', cat: 'Casa',     descricao: 'Jarra com tampa hermética', estoque: 0, ativo: true, destaque: true },
-  { id: 'tup_pote',   nome: 'Pote Visual 500ml',       marca: 'Tupperware', preco: 45,  icon: '🥡', cat: 'Casa',     descricao: 'Pote transparente com tampa', estoque: 0, ativo: true },
-  { id: 'tup_tigela', nome: 'Tigela Ultra Pro',        marca: 'Tupperware', preco: 120, icon: '🍲', cat: 'Casa',     descricao: 'Tigela multi-uso', estoque: 0, ativo: true },
-  { id: 'tup_kit',    nome: 'Kit Básico de Potes',     marca: 'Tupperware', preco: 180, icon: '📦', cat: 'Casa',     descricao: 'Kit com 4 potes sortidos', estoque: 0, ativo: true, destaque: true },
-  // Avon
-  { id: 'avon_perf',  nome: 'Perfume Lily Flower 75ml', marca: 'Avon',      preco: 89,  icon: '🌸', cat: 'Beleza',   descricao: 'Deo parfum feminino', estoque: 0, ativo: true, destaque: true },
-  { id: 'avon_bat',   nome: 'Batom Matte Perfeito',     marca: 'Avon',      preco: 28,  icon: '💄', cat: 'Beleza',   descricao: 'Batom com acabamento matte', estoque: 0, ativo: true },
-  { id: 'avon_serum', nome: 'Sérum Vitamina C 30ml',    marca: 'Avon',      preco: 65,  icon: '✨', cat: 'Cuidado',  descricao: 'Sérum iluminador', estoque: 0, ativo: true },
-  { id: 'avon_masc',  nome: 'Máscara Volume On',        marca: 'Avon',      preco: 35,  icon: '👁️', cat: 'Beleza',   descricao: 'Máscara volumizadora', estoque: 0, ativo: true },
-  // Boticário
-  { id: 'bot_malb',   nome: 'Malbec Gold 100ml',        marca: 'Boticário', preco: 149, icon: '🌿', cat: 'Beleza',   descricao: 'Deo colônia', estoque: 0, ativo: true, destaque: true },
-  { id: 'bot_nativa', nome: 'Loção Nativa Spa 400ml',   marca: 'Boticário', preco: 49,  icon: '🧴', cat: 'Cuidado',  descricao: 'Hidratante corporal', estoque: 0, ativo: true },
-  { id: 'bot_creme',  nome: 'Creme Hands & Nails',      marca: 'Boticário', preco: 32,  icon: '💅', cat: 'Cuidado',  descricao: 'Creme para mãos', estoque: 0, ativo: true },
-  { id: 'bot_kit',    nome: 'Kit Presente Floratta',    marca: 'Boticário', preco: 189, icon: '🎁', cat: 'Beleza',   descricao: 'Kit perfume + loção + sabonete', estoque: 0, ativo: true, destaque: true },
-  // Eudora
-  { id: 'eud_glam',   nome: 'Glamour Intense 95ml',     marca: 'Eudora',    preco: 129, icon: '💜', cat: 'Beleza',   descricao: 'Deo parfum sofisticado', estoque: 0, ativo: true, destaque: true },
-  { id: 'eud_base',   nome: 'Base HD Fluida',           marca: 'Eudora',    preco: 79,  icon: '🎨', cat: 'Beleza',   descricao: 'Base alta definição', estoque: 0, ativo: true },
-  { id: 'eud_glow',   nome: 'Iluminador Glow Skin',     marca: 'Eudora',    preco: 55,  icon: '🌟', cat: 'Beleza',   descricao: 'Iluminador face e corpo', estoque: 0, ativo: true },
-  { id: 'eud_pal',    nome: 'Paleta Sombras Rose',      marca: 'Eudora',    preco: 95,  icon: '🎭', cat: 'Beleza',   descricao: 'Paleta com 9 cores', estoque: 0, ativo: true },
-  // Natura
-  { id: 'nat_ekos',   nome: 'Ekos Maracujá 400ml',      marca: 'Natura',    preco: 58,  icon: '🌱', cat: 'Cuidado',  descricao: 'Loção hidratante corporal', estoque: 0, ativo: true, destaque: true },
-  { id: 'nat_chron',  nome: 'Chronos Creme Dia FPS30',  marca: 'Natura',    preco: 89,  icon: '🌞', cat: 'Cuidado',  descricao: 'Creme anti-idade', estoque: 0, ativo: true },
-  { id: 'nat_ess',    nome: 'Essencial 100ml',          marca: 'Natura',    preco: 119, icon: '🌺', cat: 'Beleza',   descricao: 'Deo parfum clássico', estoque: 0, ativo: true },
-  { id: 'nat_kit',    nome: 'Kit Presente Ekos',        marca: 'Natura',    preco: 145, icon: '🎁', cat: 'Conforto', descricao: 'Kit sabonete + hidratante + óleo', estoque: 0, ativo: true, destaque: true },
+  // Feminino
+  { id: 'fem_vestido',  nome: 'Vestido Midi Floral',       marca: 'Feminino',   preco: 129, icon: '👗', cat: 'Vestidos',  descricao: 'Vestido leve estampa floral', estoque: 0, ativo: true, destaque: true },
+  { id: 'fem_blusa',    nome: 'Blusa Cropped Básica',      marca: 'Feminino',   preco: 49,  icon: '👚', cat: 'Blusas',    descricao: 'Cropped algodão cores variadas', estoque: 0, ativo: true },
+  { id: 'fem_calca',    nome: 'Calça Jeans Skinny',        marca: 'Feminino',   preco: 119, icon: '👖', cat: 'Calças',    descricao: 'Jeans modelagem skinny', estoque: 0, ativo: true },
+  { id: 'fem_jaqueta',  nome: 'Jaqueta Jeans Oversized',  marca: 'Feminino',   preco: 159, icon: '🧥', cat: 'Jaquetas',  descricao: 'Jaqueta jeans oversized tendência', estoque: 0, ativo: true, destaque: true },
+  // Masculino
+  { id: 'mas_camisa',   nome: 'Camisa Social Slim',        marca: 'Masculino',  preco: 89,  icon: '👔', cat: 'Camisas',   descricao: 'Camisa social slim fit', estoque: 0, ativo: true, destaque: true },
+  { id: 'mas_camiseta', nome: 'Camiseta Streetwear',       marca: 'Masculino',  preco: 59,  icon: '👕', cat: 'Camisetas', descricao: 'Camiseta oversized estampada', estoque: 0, ativo: true },
+  { id: 'mas_bermuda',  nome: 'Bermuda Cargo',             marca: 'Masculino',  preco: 89,  icon: '🩳', cat: 'Calças',    descricao: 'Bermuda cargo com bolsos laterais', estoque: 0, ativo: true },
+  { id: 'mas_moletom',  nome: 'Moletom Canguru',           marca: 'Masculino',  preco: 149, icon: '🧥', cat: 'Moletons',  descricao: 'Moletom com bolso canguru', estoque: 0, ativo: true, destaque: true },
+  // Acessórios
+  { id: 'aces_bolsa',   nome: 'Bolsa Transversal Couro',  marca: 'Acessórios', preco: 139, icon: '👜', cat: 'Bolsas',    descricao: 'Bolsa couro sintético', estoque: 0, ativo: true, destaque: true },
+  { id: 'aces_bone',    nome: 'Boné Dad Hat',              marca: 'Acessórios', preco: 45,  icon: '🧢', cat: 'Bonés',     descricao: 'Boné dad hat unissex', estoque: 0, ativo: true },
+  { id: 'aces_oculos',  nome: 'Óculos de Sol Retrô',       marca: 'Acessórios', preco: 79,  icon: '🕶️', cat: 'Óculos',    descricao: 'Armação retrô proteção UV', estoque: 0, ativo: true },
+  { id: 'aces_cinto',   nome: 'Cinto Couro Reversível',   marca: 'Acessórios', preco: 55,  icon: '🪢', cat: 'Cintos',    descricao: 'Cinto couro preto/marrom', estoque: 0, ativo: true },
+  // Calçados
+  { id: 'cal_tenis',    nome: 'Tênis Chunky Plataforma',   marca: 'Calçados',   preco: 189, icon: '👟', cat: 'Tênis',     descricao: 'Tênis sola grossa tendência', estoque: 0, ativo: true, destaque: true },
+  { id: 'cal_sandalia', nome: 'Sandália Flatform',         marca: 'Calçados',   preco: 99,  icon: '👡', cat: 'Sandálias', descricao: 'Sandália flatform confortável', estoque: 0, ativo: true },
+  { id: 'cal_chinelo',  nome: 'Chinelo Slide Premium',     marca: 'Calçados',   preco: 59,  icon: '🩴', cat: 'Chinelos',  descricao: 'Slide com palmilha macia', estoque: 0, ativo: true },
+  { id: 'cal_bota',     nome: 'Bota Cano Curto',           marca: 'Calçados',   preco: 219, icon: '🥾', cat: 'Botas',     descricao: 'Bota couro sintético cano curto', estoque: 0, ativo: true, destaque: true },
+  // Infantil
+  { id: 'inf_conj',     nome: 'Conjunto Infantil Verão',  marca: 'Infantil',   preco: 79,  icon: '🧒', cat: 'Conjuntos', descricao: 'Conjunto short + camiseta', estoque: 0, ativo: true, destaque: true },
+  { id: 'inf_vestido',  nome: 'Vestido Infantil Festa',   marca: 'Infantil',   preco: 95,  icon: '👗', cat: 'Vestidos',  descricao: 'Vestido festa com tule', estoque: 0, ativo: true },
+  { id: 'inf_camisa',   nome: 'Camisa Polo Infantil',     marca: 'Infantil',   preco: 55,  icon: '👕', cat: 'Camisas',   descricao: 'Polo algodão infantil', estoque: 0, ativo: true },
+  { id: 'inf_tenis',    nome: 'Tênis Infantil Sport',     marca: 'Infantil',   preco: 109, icon: '👟', cat: 'Tênis',     descricao: 'Tênis esportivo infantil', estoque: 0, ativo: true, destaque: true },
 ];
 
 let _prodCache: Prod[] = [...PRODS];
@@ -86,41 +86,41 @@ export const NAV: [string, string][] = [
 ];
 
 export const CFG0: Config = {
-  nomeEmpresa: 'Rejjanevendas',
-  slogan: 'Beleza • Casa • Cuidado • Você',
-  telefone: '(61) 98294-9194',
-  instagram: '@rejane_vendas',
-  cidade: 'Céu Azul / Gama — DF',
+  nomeEmpresa: 'Paizão Moda Jovem',
+  slogan: 'Estilo • Atitude • Você na Moda',
+  telefone: '(61) 99000-0000',
+  instagram: '@paizao_modajovem',
+  cidade: 'Brasília — DF',
   msgs: {
-    orcamento:   'Olá {nome}! 🌸 Orçamento *Rejjanevendas*:\n\nProduto: *{produto}*\nQtd: *{qtd}* un\nUnit.: *{vUnit}*\nTotal: *{total}*\nPrazo: *{prazo}*\n\nPara confirmar, é só responder! 💕',
-    confirmado:  'Olá {nome}! ✅ Seu pedido de *{produto}* foi confirmado! Prazo: *{prazo}*. Total: *{total}*. Sinal: *{sinal}*. Restante: *{restante}*. Obrigada pela confiança! 💕',
-    encomendado: 'Olá {nome}! 📦 Seu pedido de *{produto}* foi encomendado! Em breve chega e eu te aviso. Prazo estimado: *{prazo}*. 🌸',
-    chegou:      'Olá {nome}! ✨ *CHEGOU!* Seu pedido de *{produto}* está pronto para retirada! Restante: *{restante}*. Retirada em *Céu Azul ou Gama (DF)*. 💕',
-    entregue:    'Olá {nome}! 🌹 Pedido entregue! Obrigada pela confiança. Siga no Instagram: {instagram}. 💕 Até a próxima! 🌸',
-    cobranca:    'Olá {nome}! 💰 Passando para lembrar do pagamento de *{produto}*.\n\nValor: *{total}*\nSinal pago: *{sinal}*\nRestante: *{restante}*\nVencimento: *{vencimento}*\n\nQualquer dúvida, é só chamar! 💕',
+    orcamento:   'Olá {nome}! 😎 Orçamento *Paizão Moda Jovem*:\n\nProduto: *{produto}*\nQtd: *{qtd}* un\nUnit.: *{vUnit}*\nTotal: *{total}*\nPrazo: *{prazo}*\n\nPara confirmar, é só responder! 🔥',
+    confirmado:  'Olá {nome}! ✅ Seu pedido de *{produto}* foi confirmado! Prazo: *{prazo}*. Total: *{total}*. Sinal: *{sinal}*. Restante: *{restante}*. Obrigado pela preferência! 🔥',
+    encomendado: 'Olá {nome}! 📦 Seu pedido de *{produto}* foi encomendado! Em breve chega e eu te aviso. Prazo estimado: *{prazo}*. 😎',
+    chegou:      'Olá {nome}! ✨ *CHEGOU!* Seu pedido de *{produto}* está pronto para retirada! Restante: *{restante}*. Retirada em *Brasília — DF*. 🔥',
+    entregue:    'Olá {nome}! 🎉 Pedido entregue! Obrigado pela preferência. Siga no Instagram: {instagram}. 😎 Até a próxima!',
+    cobranca:    'Olá {nome}! 💰 Passando para lembrar do pagamento de *{produto}*.\n\nValor: *{total}*\nSinal pago: *{sinal}*\nRestante: *{restante}*\nVencimento: *{vencimento}*\n\nQualquer dúvida, é só chamar! 😎',
   },
 };
 
 export const CLI0: Cliente[] = [
-  { id: 1, nome: 'Ana Paula Souza',  tel: '(61) 99111-2233', obs: 'Gosta de Natura e Boticário.',    fav: true  },
-  { id: 2, nome: 'Carla Santos',     tel: '(61) 98222-3344', obs: 'Pede Tupperware todo mês.',       fav: false },
-  { id: 3, nome: 'Renata Lima',      tel: '(61) 97333-4455', obs: 'Prefere Eudora — maquiagem.',     fav: false },
-  { id: 4, nome: 'Juliana Costa',    tel: '(61) 96444-5566', obs: 'VIP — indica muito.',             fav: true  },
-  { id: 5, nome: 'Bia Carvalho',     tel: '(61) 95555-6677', obs: 'Sempre pede kit presente.',      fav: false },
+  { id: 1, nome: 'Lucas Ferreira',    tel: '(61) 99111-2233', obs: 'Gosta de streetwear e moletons.',   fav: true  },
+  { id: 2, nome: 'Mariana Oliveira',  tel: '(61) 98222-3344', obs: 'Sempre compra vestidos e bolsas.',  fav: false },
+  { id: 3, nome: 'Gabriel Santos',    tel: '(61) 97333-4455', obs: 'Fã de tênis e acessórios.',         fav: false },
+  { id: 4, nome: 'Isabela Costa',     tel: '(61) 96444-5566', obs: 'VIP — indica muito. Gosta de jeans.', fav: true },
+  { id: 5, nome: 'Pedro Almeida',     tel: '(61) 95555-6677', obs: 'Compra para a família inteira.',    fav: false },
 ];
 
 export const PED0: Pedido[] = [
-  { id: 2001, cliId: 1, cliNome: 'Ana Paula Souza', itens: [{ prodId: 'nat_kit',  qtd: 1, vUnit: 145 }], vTotal: 145, pagamento: 'pix',     data: hoje(),    prazo: dPlus(5), st: 'encomendado', sinal: 70,  obs: 'Presente para a mãe dela.' },
-  { id: 2002, cliId: 2, cliNome: 'Carla Santos',    itens: [{ prodId: 'tup_kit',  qtd: 1, vUnit: 180 }], vTotal: 180, pagamento: 'credito', data: hoje(),    prazo: dPlus(7), st: 'confirmado',  sinal: 90,  obs: '' },
-  { id: 2003, cliId: 3, cliNome: 'Renata Lima',     itens: [{ prodId: 'eud_glam', qtd: 1, vUnit: 129 }], vTotal: 129, pagamento: 'pix',     data: hoje(),    prazo: dPlus(3), st: 'chegou',      sinal: 129, obs: 'Pronto para retirar.' },
-  { id: 2004, cliId: 4, cliNome: 'Juliana Costa',   itens: [{ prodId: 'bot_malb', qtd: 2, vUnit: 149 }], vTotal: 298, pagamento: 'dinheiro',data: dPlus(-2), prazo: dPlus(2), st: 'orcamento',   sinal: 0,   obs: 'Dois Malbec para presente.' },
-  { id: 2005, cliId: 5, cliNome: 'Bia Carvalho',    itens: [{ prodId: 'bot_kit',  qtd: 1, vUnit: 189 }], vTotal: 189, pagamento: 'pix',     data: dPlus(-1), prazo: dPlus(4), st: 'encomendado', sinal: 100, obs: '' },
+  { id: 2001, cliId: 1, cliNome: 'Lucas Ferreira',   itens: [{ prodId: 'mas_moletom', qtd: 1, vUnit: 149 }], vTotal: 149, pagamento: 'pix',      data: hoje(),    prazo: dPlus(5), st: 'encomendado', sinal: 80,  obs: 'Tamanho G.' },
+  { id: 2002, cliId: 2, cliNome: 'Mariana Oliveira', itens: [{ prodId: 'fem_vestido', qtd: 1, vUnit: 129 }, { prodId: 'aces_bolsa', qtd: 1, vUnit: 139 }], vTotal: 268, pagamento: 'credito', data: hoje(), prazo: dPlus(7), st: 'confirmado', sinal: 130, obs: '' },
+  { id: 2003, cliId: 3, cliNome: 'Gabriel Santos',   itens: [{ prodId: 'cal_tenis',   qtd: 1, vUnit: 189 }], vTotal: 189, pagamento: 'pix',      data: hoje(),    prazo: dPlus(3), st: 'chegou',      sinal: 189, obs: 'Número 42. Pronto para retirar.' },
+  { id: 2004, cliId: 4, cliNome: 'Isabela Costa',    itens: [{ prodId: 'fem_jaqueta', qtd: 1, vUnit: 159 }], vTotal: 159, pagamento: 'dinheiro', data: dPlus(-2), prazo: dPlus(2), st: 'orcamento',   sinal: 0,   obs: 'Aguardando confirmação de tamanho.' },
+  { id: 2005, cliId: 5, cliNome: 'Pedro Almeida',    itens: [{ prodId: 'inf_conj',    qtd: 2, vUnit: 79  }, { prodId: 'inf_tenis', qtd: 1, vUnit: 109 }], vTotal: 267, pagamento: 'pix', data: dPlus(-1), prazo: dPlus(4), st: 'encomendado', sinal: 150, obs: 'Para os filhos.' },
 ];
 
 export const FIN0: Lanc[] = [
-  { id: 1, tipo: 'entrada', desc: 'Sinal Kit Ekos — Ana Paula',      valor: 70,  data: hoje()    },
-  { id: 2, tipo: 'entrada', desc: 'Sinal Tupperware — Carla Santos', valor: 90,  data: hoje()    },
-  { id: 3, tipo: 'entrada', desc: 'Glamour Intense — Renata Lima',   valor: 129, data: dPlus(-2) },
-  { id: 4, tipo: 'saida',   desc: 'Pedido Tupperware campanha 15',   valor: 160, data: dPlus(-3) },
-  { id: 5, tipo: 'saida',   desc: 'Pedido Natura campanha 10',       valor: 98,  data: dPlus(-4) },
+  { id: 1, tipo: 'entrada', desc: 'Sinal Moletom — Lucas Ferreira',      valor: 80,  data: hoje()    },
+  { id: 2, tipo: 'entrada', desc: 'Sinal Vestido + Bolsa — Mariana',     valor: 130, data: hoje()    },
+  { id: 3, tipo: 'entrada', desc: 'Tênis Chunky — Gabriel Santos',       valor: 189, data: dPlus(-2) },
+  { id: 4, tipo: 'saida',   desc: 'Reposição estoque feminino',          valor: 420, data: dPlus(-3) },
+  { id: 5, tipo: 'saida',   desc: 'Frete fornecedor calçados',           valor: 85,  data: dPlus(-4) },
 ];
