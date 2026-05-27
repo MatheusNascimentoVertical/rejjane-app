@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidingIndicator } from '../components/SlidingIndicator';
 import { useSwipe } from '../hooks/useSwipe';
@@ -56,7 +56,7 @@ export function Pedidos({ ctx }: Props) {
         )}
         <AnimatePresence>
           {filt.map((p, i) => (
-            <PedidoCard key={p.id} p={p} setModal={ctx.setModal} avancar={avancar} index={i} />
+            <PedidoCard key={p.id} p={p} setModal={ctx.setModal} avancar={avancar} setPeds={ctx.setPeds} index={i} />
           ))}
         </AnimatePresence>
       </div>
@@ -68,8 +68,9 @@ function WppIcon() {
   return <svg width="13" height="13" viewBox="0 0 24 24" fill="#5a9b7a"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.7-1.4-1.7-1.6-2-.2-.3 0-.4.1-.5.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.5-.6-.5h-.6c-.2 0-.5.1-.7.4-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.2 2.9.2.2 2 3 4.8 4.2 1.7.7 2.3.8 3.1.6.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.7.5 3.4 1.3 4.8L2 22l5.3-1.3c1.4.7 2.9 1.1 4.5 1.1h.2c5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>;
 }
 
-type CardProps = { p: Pedido; setModal: AppCtx['setModal']; avancar: (id: number) => void; index: number };
-function PedidoCard({ p, setModal, avancar, index }: CardProps) {
+type CardProps = { p: Pedido; setModal: AppCtx['setModal']; avancar: (id: number) => void; setPeds: AppCtx['setPeds']; index: number };
+function PedidoCard({ p, setModal, avancar, setPeds, index }: CardProps) {
+  const [confirmDel, setConfirmDel] = useState(false);
   const firstProd = getProd(p.itens?.[0]?.prodId ?? '');
   const stCfg = ST[p.st];
   const dias = diasAte(p.prazo);
@@ -162,6 +163,15 @@ function PedidoCard({ p, setModal, avancar, index }: CardProps) {
             <motion.button className="btn-cobrar-sm" onClick={() => setModal({ tipo: 'wpp', ped: p, msgTipo: 'cobranca' })} whileTap={{ scale: 0.94 }}>💰 Cobrar</motion.button>
           )}
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'oc', ped: p })} whileTap={{ scale: 0.94 }}>📄 Orçamento</motion.button>
+          {confirmDel ? (
+            <>
+              <span style={{ fontSize: 12, color: '#b85050', fontWeight: 700 }}>Excluir pedido?</span>
+              <motion.button className="btn-danger-sm" onClick={() => setPeds(ps => ps.filter(x => x.id !== p.id))} whileTap={{ scale: 0.94 }}>Sim</motion.button>
+              <motion.button className="btn-soft-sm" onClick={() => setConfirmDel(false)} whileTap={{ scale: 0.94 }}>Não</motion.button>
+            </>
+          ) : (
+            <motion.button className="btn-danger-sm" onClick={() => setConfirmDel(true)} whileTap={{ scale: 0.94 }}>🗑 Excluir</motion.button>
+          )}
         </div>
       </div>
     </motion.div>
