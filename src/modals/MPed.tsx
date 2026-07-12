@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
@@ -12,10 +12,9 @@ type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose:
 function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const atual = prodList.find(p => p.id === prodId);
 
-  const filtered = q.trim().length > 0
+  const filtered = q.trim()
     ? prodList.filter(p =>
         p.nome.toLowerCase().includes(q.toLowerCase()) ||
         p.marca.toLowerCase().includes(q.toLowerCase()) ||
@@ -23,31 +22,30 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
       )
     : prodList;
 
-  useEffect(() => {
-    if (!open) setQ('');
-  }, [open]);
-
   return (
     <div className="prod-search-wrap">
       <input
-        ref={inputRef}
         className="prod-search-input"
         value={open ? q : (atual?.nome ?? '')}
         placeholder="Buscar produto..."
-        onFocus={() => setOpen(true)}
+        onFocus={() => { setOpen(true); setQ(''); }}
+        onBlur={() => setTimeout(() => { setOpen(false); setQ(''); }, 200)}
         onChange={e => setQ(e.target.value)}
-        onBlur={() => setTimeout(() => setOpen(false), 180)}
         autoComplete="off"
       />
       {open && (
         <div className="prod-search-list">
           {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
           {filtered.map(p => (
-            <button
+            <div
               key={p.id}
-              type="button"
               className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onPointerDown={e => { e.preventDefault(); onSelect(p.id); setOpen(false); }}
+              onMouseDown={e => {
+                e.preventDefault(); // impede blur no input antes da seleção
+                onSelect(p.id);
+                setOpen(false);
+                setQ('');
+              }}
             >
               <span className="prod-search-icon">{p.icon}</span>
               <span className="prod-search-info">
@@ -55,7 +53,7 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
                 <span className="prod-search-marca">{p.marca}</span>
               </span>
               <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-            </button>
+            </div>
           ))}
         </div>
       )}
