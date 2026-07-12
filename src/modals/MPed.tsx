@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
@@ -10,8 +10,9 @@ import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Client
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
 function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
-  const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const atual = prodList.find(p => p.id === prodId);
 
   const filtered = q.trim()
@@ -22,41 +23,54 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
       )
     : prodList;
 
+  const select = (id: string) => {
+    onSelect(id);
+    setOpen(false);
+    setQ('');
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="prod-trigger"
+        onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 0); }}
+      >
+        <span className="prod-trigger-nome">{atual?.nome ?? 'Selecionar produto...'}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    );
+  }
+
   return (
-    <div className="prod-search-wrap">
+    <div className="prod-search-panel">
       <input
-        className="prod-search-input"
-        value={open ? q : (atual?.nome ?? '')}
+        ref={inputRef}
+        autoFocus
+        className="prod-search-q"
         placeholder="Buscar produto..."
-        onFocus={() => { setOpen(true); setQ(''); }}
-        onBlur={() => setTimeout(() => { setOpen(false); setQ(''); }, 200)}
+        value={q}
         onChange={e => setQ(e.target.value)}
         autoComplete="off"
       />
-      {open && (
-        <div className="prod-search-list">
-          {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
-          {filtered.map(p => (
-            <div
-              key={p.id}
-              className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onMouseDown={e => {
-                e.preventDefault(); // impede blur no input antes da seleção
-                onSelect(p.id);
-                setOpen(false);
-                setQ('');
-              }}
-            >
-              <span className="prod-search-icon">{p.icon}</span>
-              <span className="prod-search-info">
-                <span className="prod-search-nome">{p.nome}</span>
-                <span className="prod-search-marca">{p.marca}</span>
-              </span>
-              <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="prod-search-results">
+        {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
+        {filtered.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
+            onClick={() => select(p.id)}
+          >
+            <span className="prod-search-icon">{p.icon}</span>
+            <span className="prod-search-info">
+              <span className="prod-search-nome">{p.nome}</span>
+              <span className="prod-search-marca">{p.marca}</span>
+            </span>
+            <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
