@@ -543,6 +543,20 @@ body {
 .ped-item-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
 .ped-item-select { flex: 1; min-width: 0; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); outline: none; cursor: pointer; }
 .ped-item-del { display: none; }
+.prod-search-wrap { flex: 1; min-width: 0; position: relative; }
+.prod-search-input { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); outline: none; cursor: pointer; padding: 0; }
+.prod-search-input::placeholder { color: var(--ink-mute); font-weight: 500; }
+.prod-search-list { position: absolute; top: calc(100% + 8px); left: -44px; right: -16px; background: #fff; border: 1.5px solid var(--line); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); z-index: 200; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+.prod-search-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; width: 100%; background: none; border: none; border-bottom: 1px solid var(--line); cursor: pointer; text-align: left; transition: background 0.1s; }
+.prod-search-item:last-child { border-bottom: none; }
+.prod-search-item:hover, .prod-search-item:active { background: var(--cream-2); }
+.prod-search-item.selected { background: var(--rose-pale); }
+.prod-search-icon { font-size: 22px; flex-shrink: 0; }
+.prod-search-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.prod-search-nome { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prod-search-marca { font-size: 11px; color: var(--ink-mute); }
+.prod-search-preco { font-size: 12px; font-weight: 800; color: var(--rose-d); flex-shrink: 0; }
+.prod-search-empty { padding: 14px; text-align: center; color: var(--ink-mute); font-size: 13px; }
 .ped-item-bottom { display: flex; align-items: center; gap: 16px; padding: 10px 14px; flex-wrap: wrap; }
 .ped-item-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-mute); font-weight: 800; display: block; margin-bottom: 4px; }
 .ped-qty-wrap { display: flex; flex-direction: column; }

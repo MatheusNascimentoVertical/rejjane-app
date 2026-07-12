@@ -1,12 +1,68 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
 import { PRODS, ST, getProd } from '../data/constants';
+import type { Prod } from '../data/constants';
 import { hoje, dPlus, fmtR$ } from '../lib/helpers';
 import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Cliente } from '../types';
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
+
+function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const atual = prodList.find(p => p.id === prodId);
+
+  const filtered = q.trim().length > 0
+    ? prodList.filter(p =>
+        p.nome.toLowerCase().includes(q.toLowerCase()) ||
+        p.marca.toLowerCase().includes(q.toLowerCase()) ||
+        p.cat.toLowerCase().includes(q.toLowerCase())
+      )
+    : prodList;
+
+  useEffect(() => {
+    if (!open) setQ('');
+  }, [open]);
+
+  return (
+    <div className="prod-search-wrap">
+      <input
+        ref={inputRef}
+        className="prod-search-input"
+        value={open ? q : (atual?.nome ?? '')}
+        placeholder="Buscar produto..."
+        onFocus={() => setOpen(true)}
+        onChange={e => setQ(e.target.value)}
+        onBlur={() => setTimeout(() => setOpen(false), 180)}
+        autoComplete="off"
+      />
+      {open && (
+        <div className="prod-search-list">
+          {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
+          {filtered.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
+              onMouseDown={e => { e.preventDefault(); onSelect(p.id); setOpen(false); }}
+              onTouchStart={() => { onSelect(p.id); setOpen(false); }}
+            >
+              <span className="prod-search-icon">{p.icon}</span>
+              <span className="prod-search-info">
+                <span className="prod-search-nome">{p.nome}</span>
+                <span className="prod-search-marca">{p.marca}</span>
+              </span>
+              <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const PAG_OPTS: { value: Pagamento; label: string }[] = [
   { value: 'pix',      label: 'PIX' },
@@ -130,9 +186,11 @@ export function MPed({ dados, ctx, onClose }: Props) {
               <button className="ped-item-del-abs" onClick={() => removeItem(i)} title="Remover produto">✕</button>
               <div className="ped-item-top">
                 <span className="ped-item-icon">{prodAtual?.icon ?? '📦'}</span>
-                <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
-                  {prodList.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
+                <ProdSearch
+                  prodId={item.prodId}
+                  prodList={prodList}
+                  onSelect={id => setProdItem(i, id)}
+                />
               </div>
               <div className="ped-item-bottom">
                 <div className="ped-qty-wrap">
