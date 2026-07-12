@@ -27,7 +27,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
 
   const [f, setF] = useState<PedidoForm>({
     cliId:     dados?.cliId      ?? (clis[0]?.id ?? ''),
-    itens:     dados?.itens?.length ? dados.itens : [defaultItem()],
+    itens:     dados?.itens?.length ? dados.itens : [],
     pagamento: dados?.pagamento  ?? 'pix',
     data:      dados?.data       ?? hoje(),
     prazo:     dados?.prazo      ?? dPlus(7),
@@ -135,11 +135,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
                 <button
                   className="ped-item-del"
                   onClick={() => {
-                    if (f.itens.length === 1) {
-                      setF(s => ({ ...s, itens: [defaultItem()] }));
-                    } else {
-                      removeItem(i);
-                    }
+                    removeItem(i);
                   }}
                   title="Remover produto"
                 >
