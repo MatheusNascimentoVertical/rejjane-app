@@ -27,7 +27,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
 
   const [f, setF] = useState<PedidoForm>({
     cliId:     dados?.cliId      ?? (clis[0]?.id ?? ''),
-    itens:     dados?.itens?.length ? dados.itens : [defaultItem()],
+    itens:     dados?.itens?.length ? dados.itens : [],
     pagamento: dados?.pagamento  ?? 'pix',
     data:      dados?.data       ?? hoje(),
     prazo:     dados?.prazo      ?? dPlus(7),
@@ -132,9 +132,15 @@ export function MPed({ dados, ctx, onClose }: Props) {
                 <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
                   {prodList.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
-                {f.itens.length > 1 && (
-                  <button className="ped-item-del" onClick={() => removeItem(i)}>×</button>
-                )}
+                <button
+                  className="ped-item-del"
+                  onClick={() => {
+                    removeItem(i);
+                  }}
+                  title="Remover produto"
+                >
+                  🗑
+                </button>
               </div>
               <div className="ped-item-bottom">
                 <div className="ped-qty-wrap">

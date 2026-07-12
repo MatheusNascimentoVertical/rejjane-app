@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-export type PedStatus = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'cancelado';
+export type PedStatus = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'pago' | 'cancelado';
 export type MsgKey = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'cobranca';
 export type Pagamento = 'pix' | 'credito' | 'dinheiro';
 

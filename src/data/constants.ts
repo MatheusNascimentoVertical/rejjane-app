@@ -66,6 +66,7 @@ export const ST: Record<string, StCfg> = {
   encomendado: { label: 'Encomendado', cor: '#0288d1', bg: '#e1f5fe' },
   chegou:      { label: 'Chegou ✨',   cor: '#c2185b', bg: '#fce4ec' },
   entregue:    { label: 'Entregue',    cor: '#5a9b7a', bg: '#e6f1ea' },
+  pago:        { label: 'Pago ✅',     cor: '#2e7d32', bg: '#e8f5e9' },
   cancelado:   { label: 'Cancelado',   cor: '#b87878', bg: '#f5e4e4' },
 };
 
@@ -74,6 +75,7 @@ export const PROX: Partial<Record<PedStatus, PedStatus>> = {
   confirmado:  'encomendado',
   encomendado: 'chegou',
   chegou:      'entregue',
+  entregue:    'pago',
 };
 
 export const NAV: [string, string][] = [
