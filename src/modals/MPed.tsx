@@ -12,7 +12,7 @@ type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose:
 function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const atual = prodList.find(p => p.id === prodId);
 
   const filtered = q.trim().length > 0
@@ -23,31 +23,48 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
       )
     : prodList;
 
+  // Fecha ao clicar/tocar fora — sem depender de onBlur
   useEffect(() => {
-    if (!open) setQ('');
+    if (!open) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQ('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, [open]);
 
+  const handleSelect = (id: string) => {
+    onSelect(id);
+    setOpen(false);
+    setQ('');
+  };
+
   return (
-    <div className="prod-search-wrap">
+    <div ref={wrapRef} className="prod-search-wrap">
       <input
-        ref={inputRef}
         className="prod-search-input"
         value={open ? q : (atual?.nome ?? '')}
         placeholder="Buscar produto..."
-        onFocus={() => setOpen(true)}
+        onFocus={() => { setOpen(true); setQ(''); }}
         onChange={e => setQ(e.target.value)}
-        onBlur={() => setTimeout(() => setOpen(false), 180)}
         autoComplete="off"
+        readOnly={!open}
       />
       {open && (
         <div className="prod-search-list">
           {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
           {filtered.map(p => (
-            <button
+            <div
               key={p.id}
-              type="button"
               className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onPointerDown={e => { e.preventDefault(); onSelect(p.id); setOpen(false); }}
+              onClick={() => handleSelect(p.id)}
             >
               <span className="prod-search-icon">{p.icon}</span>
               <span className="prod-search-info">
@@ -55,7 +72,7 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
                 <span className="prod-search-marca">{p.marca}</span>
               </span>
               <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-            </button>
+            </div>
           ))}
         </div>
       )}
