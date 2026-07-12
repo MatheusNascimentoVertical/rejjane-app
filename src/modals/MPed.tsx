@@ -132,9 +132,19 @@ export function MPed({ dados, ctx, onClose }: Props) {
                 <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
                   {prodList.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
-                {f.itens.length > 1 && (
-                  <button className="ped-item-del" onClick={() => removeItem(i)}>×</button>
-                )}
+                <button
+                  className="ped-item-del"
+                  onClick={() => {
+                    if (f.itens.length === 1) {
+                      setF(s => ({ ...s, itens: [defaultItem()] }));
+                    } else {
+                      removeItem(i);
+                    }
+                  }}
+                  title="Remover produto"
+                >
+                  🗑
+                </button>
               </div>
               <div className="ped-item-bottom">
                 <div className="ped-qty-wrap">

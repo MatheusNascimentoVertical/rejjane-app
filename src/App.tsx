@@ -180,14 +180,14 @@ export default function App() {
   const mes = hoje().slice(0, 7);
   const recMes  = fin.filter(f => f.tipo === 'entrada' && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
   const despMes = fin.filter(f => f.tipo === 'saida'   && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
-  const ativos    = peds.filter(p => p.st !== 'entregue' && p.st !== 'cancelado');
+  const ativos    = peds.filter(p => p.st !== 'entregue' && p.st !== 'pago' && p.st !== 'cancelado');
   const atrasados = ativos.filter(p => p.prazo < hoje());
 
   const avancar = (id: number) => setPeds(prev => prev.map(p => {
     if (p.id !== id) return p;
     const prox = PROX[p.st];
     if (!prox) return p;
-    if (prox === 'entregue') {
+    if (prox === 'pago') {
       const rest = p.vTotal - p.sinal;
       if (rest > 0) setFin(f => [{ id: Date.now(), tipo: 'entrada', desc: `Pgto final — ${p.cliNome}`, valor: rest, data: hoje() }, ...f]);
     }

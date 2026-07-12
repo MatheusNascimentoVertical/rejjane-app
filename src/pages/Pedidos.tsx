@@ -180,9 +180,21 @@ function PedidoCard({ p, setModal, avancar, setPeds, index }: CardProps) {
 
         <div className="ped-actions">
           {PROX[p.st] && (
-            <motion.button className="btn-primary-sm" onClick={() => avancar(p.id)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }}>
-              Avançar para {ST[PROX[p.st]!].label} →
-            </motion.button>
+            p.st === 'entregue' ? (
+              <motion.button
+                className="btn-pago"
+                onClick={() => avancar(p.id)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.94 }}
+                style={{ background: '#2e7d32', color: '#fff', fontWeight: 700, fontSize: 15, padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', width: '100%' }}
+              >
+                ✅ Marcar como Pago
+              </motion.button>
+            ) : (
+              <motion.button className="btn-primary-sm" onClick={() => avancar(p.id)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }}>
+                Avançar para {ST[PROX[p.st]!].label} →
+              </motion.button>
+            )
           )}
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'ped', dados: { ...p } })} whileTap={{ scale: 0.94 }}>Editar</motion.button>
           <motion.button className="btn-soft-sm" onClick={() => setModal({ tipo: 'wpp', ped: p })} whileTap={{ scale: 0.94 }}><WppIcon /> WhatsApp</motion.button>
