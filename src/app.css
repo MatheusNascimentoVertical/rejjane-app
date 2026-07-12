@@ -543,10 +543,14 @@ body {
 .ped-item-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
 .ped-item-select { flex: 1; min-width: 0; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); outline: none; cursor: pointer; }
 .ped-item-del { display: none; }
-.prod-search-wrap { flex: 1; min-width: 0; position: relative; }
-.prod-search-input { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); outline: none; cursor: pointer; padding: 0; }
-.prod-search-input::placeholder { color: var(--ink-mute); font-weight: 500; }
-.prod-search-list { position: absolute; top: calc(100% + 8px); left: -44px; right: -16px; background: #fff; border: 1.5px solid var(--line); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); z-index: 200; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+/* Trigger (produto fechado) */
+.prod-trigger { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 6px; border: none; background: transparent; padding: 0; cursor: pointer; text-align: left; min-width: 0; }
+.prod-trigger-nome { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.prod-trigger svg { flex-shrink: 0; color: var(--ink-mute); }
+/* Painel de busca inline */
+.prod-search-panel { flex: 1; min-width: 0; }
+.prod-search-q { width: 100%; border: 1.5px solid var(--rose-l); border-radius: 10px; background: var(--cream-2); font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink); outline: none; padding: 7px 10px; box-sizing: border-box; margin-bottom: 6px; }
+.prod-search-results { max-height: 220px; overflow-y: auto; overscroll-behavior: contain; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
 .prod-search-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; width: 100%; background: none; border: none; border-bottom: 1px solid var(--line); cursor: pointer; text-align: left; transition: background 0.1s; }
 .prod-search-item:last-child { border-bottom: none; }
 .prod-search-item:hover, .prod-search-item:active { background: var(--cream-2); }
