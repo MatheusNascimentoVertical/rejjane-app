@@ -47,8 +47,7 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
               key={p.id}
               type="button"
               className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onMouseDown={e => { e.preventDefault(); onSelect(p.id); setOpen(false); }}
-              onTouchStart={() => { onSelect(p.id); setOpen(false); }}
+              onPointerDown={e => { e.preventDefault(); onSelect(p.id); setOpen(false); }}
             >
               <span className="prod-search-icon">{p.icon}</span>
               <span className="prod-search-info">
