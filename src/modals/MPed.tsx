@@ -127,20 +127,12 @@ export function MPed({ dados, ctx, onClose }: Props) {
           const prodAtual = getProd(item.prodId);
           return (
             <div key={i} className="ped-item-card">
+              <button className="ped-item-del-abs" onClick={() => removeItem(i)} title="Remover produto">✕</button>
               <div className="ped-item-top">
                 <span className="ped-item-icon">{prodAtual?.icon ?? '📦'}</span>
                 <select className="ped-item-select" value={item.prodId} onChange={e => setProdItem(i, e.target.value)}>
                   {prodList.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
-                <button
-                  className="ped-item-del"
-                  onClick={() => {
-                    removeItem(i);
-                  }}
-                  title="Remover produto"
-                >
-                  🗑
-                </button>
               </div>
               <div className="ped-item-bottom">
                 <div className="ped-qty-wrap">
@@ -152,10 +144,10 @@ export function MPed({ dados, ctx, onClose }: Props) {
                   </div>
                 </div>
                 <div className="ped-item-field">
-                  <span className="ped-item-lbl">Valor unit.</span>
+                  <span className="ped-item-lbl">Valor (R$)</span>
                   <div className="ped-price-input">
                     <span>R$</span>
-                    <input type="number" step="0.01" value={item.vUnit} onChange={e => updItem(i, { vUnit: Number(e.target.value) || 0 })} />
+                    <input type="number" step="0.01" inputMode="decimal" value={item.vUnit} onChange={e => updItem(i, { vUnit: Number(e.target.value) || 0 })} />
                   </div>
                 </div>
                 <div className="ped-item-total">
@@ -167,8 +159,8 @@ export function MPed({ dados, ctx, onClose }: Props) {
           );
         })}
         <button className="ped-add-item" onClick={addItem}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          Adicionar produto
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          + Adicionar produto
         </button>
       </div>
 
@@ -184,11 +176,10 @@ export function MPed({ dados, ctx, onClose }: Props) {
 
       <Field label="Prazo de entrega"><input type="date" value={f.prazo} onChange={e => upd('prazo', e.target.value)} /></Field>
 
-      {restante > 0 && total > 0 && (
-        <div className="venc-wrap">
+      <div className="venc-wrap">
           <div className="venc-label">
             <span>💰</span>
-            <span>Pagamento do restante — {fmtR$(restante)}</span>
+            <span>Quando vai pagar o restante?{restante > 0 ? ` — ${fmtR$(restante)}` : ''}</span>
           </div>
           <div className="pgto-modo-tabs">
             <button type="button" className={`pgto-tab${modoPgto === 'simples' ? ' active' : ''}`} onClick={() => { setModoPgto('simples'); upd('parcelas', []); }}>
@@ -242,8 +233,6 @@ export function MPed({ dados, ctx, onClose }: Props) {
             </div>
           )}
         </div>
-      )}
-
       <Field label="Status">
         <div className="status-picker">
           {Object.entries(ST).map(([k, v]) => (
