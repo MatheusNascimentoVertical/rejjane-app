@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
@@ -12,10 +12,9 @@ type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose:
 function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const atual = prodList.find(p => p.id === prodId);
 
-  const filtered = q.trim().length > 0
+  const filtered = q.trim()
     ? prodList.filter(p =>
         p.nome.toLowerCase().includes(q.toLowerCase()) ||
         p.marca.toLowerCase().includes(q.toLowerCase()) ||
@@ -23,39 +22,16 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
       )
     : prodList;
 
-  // Fecha ao clicar/tocar fora — sem depender de onBlur
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent | TouchEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setQ('');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    document.addEventListener('touchstart', handler);
-    return () => {
-      document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
-    };
-  }, [open]);
-
-  const handleSelect = (id: string) => {
-    onSelect(id);
-    setOpen(false);
-    setQ('');
-  };
-
   return (
-    <div ref={wrapRef} className="prod-search-wrap">
+    <div className="prod-search-wrap">
       <input
         className="prod-search-input"
         value={open ? q : (atual?.nome ?? '')}
         placeholder="Buscar produto..."
         onFocus={() => { setOpen(true); setQ(''); }}
+        onBlur={() => setTimeout(() => { setOpen(false); setQ(''); }, 200)}
         onChange={e => setQ(e.target.value)}
         autoComplete="off"
-        readOnly={!open}
       />
       {open && (
         <div className="prod-search-list">
@@ -64,7 +40,12 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
             <div
               key={p.id}
               className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onClick={() => handleSelect(p.id)}
+              onMouseDown={e => {
+                e.preventDefault(); // impede blur no input antes da seleção
+                onSelect(p.id);
+                setOpen(false);
+                setQ('');
+              }}
             >
               <span className="prod-search-icon">{p.icon}</span>
               <span className="prod-search-info">
