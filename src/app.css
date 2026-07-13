@@ -579,6 +579,88 @@ body {
 .config-hint { font-size: 12px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.7; }
 .config-hint code { background: var(--rose-pale); color: var(--rose-d); padding: 1px 6px; border-radius: 5px; font-size: 11px; margin-right: 3px; }
 
+/* Config tab bar */
+.cfg-tabs { display: flex; gap: 6px; background: var(--cream-2); border-radius: 16px; padding: 5px; }
+.cfg-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border: none; background: transparent; border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; color: var(--ink-mute); transition: all 0.18s; }
+.cfg-tab-icon { font-size: 18px; line-height: 1; }
+.cfg-tab.active { background: #fff; color: var(--rose-d); box-shadow: var(--shadow-1); }
+
+/* Config section wrapper */
+.cfg-section { display: flex; flex-direction: column; gap: 14px; }
+
+/* Tip banner */
+.cfg-tip { background: linear-gradient(135deg, rgba(233,30,99,0.06), rgba(233,30,99,0.03)); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.cfg-tip span:first-child { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* Config cards */
+.cfg-card { padding: 18px; }
+.cfg-card-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--ink); margin-bottom: 14px; }
+.cfg-card-title span:first-child { font-size: 18px; }
+
+/* Field hint */
+.cfg-field-hint { font-size: 11px; color: var(--ink-mute); margin-top: 4px; display: block; }
+
+/* Live preview */
+.cfg-preview { background: linear-gradient(135deg, #fce4ec, #f9d5e3); border-radius: 18px; padding: 16px; }
+.cfg-preview-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--rose-d); margin-bottom: 10px; }
+.cfg-preview-card { display: flex; gap: 14px; align-items: center; background: rgba(255,255,255,0.7); border-radius: 14px; padding: 14px; }
+.cfg-prev-logo { font-size: 36px; line-height: 1; }
+.cfg-prev-nome { font-size: 16px; font-weight: 800; color: var(--ink); }
+.cfg-prev-slogan { font-size: 12px; color: var(--rose-d); font-style: italic; margin-bottom: 6px; }
+.cfg-prev-info { font-size: 12px; color: var(--ink-soft); }
+
+/* Variables grid */
+.cfg-vars-intro { font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; line-height: 1.5; }
+.cfg-vars-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.cfg-var-chip { display: flex; flex-direction: column; gap: 2px; background: var(--cream-2); border-radius: 8px; padding: 6px 10px; border: 1px solid var(--line); }
+.cfg-var-chip code { font-size: 11px; color: var(--rose-d); font-weight: 700; }
+.cfg-var-chip span { font-size: 10px; color: var(--ink-mute); }
+
+/* Message card */
+.cfg-msg-card { padding: 16px; }
+.cfg-msg-head { margin-bottom: 10px; }
+.cfg-msg-hint { font-size: 12px; color: var(--ink-mute); margin-top: -8px; }
+
+/* Variable insert bar */
+.cfg-insert-bar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.cfg-insert-label { font-size: 10px; font-weight: 800; color: var(--ink-mute); letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+.cfg-insert-btn { background: var(--rose-pale); color: var(--rose-d); border: 1px solid rgba(233,30,99,0.2); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-family: monospace; font-weight: 700; cursor: pointer; transition: all 0.13s; }
+.cfg-insert-btn:hover { background: var(--rose-d); color: #fff; }
+
+/* WhatsApp preview bubble */
+.cfg-msg-preview { margin-top: 8px; }
+.cfg-msg-preview-label { font-size: 10px; font-weight: 800; color: var(--ink-mute); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.cfg-wpp-bubble { background: #e7fde3; border-radius: 12px 12px 4px 12px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: #1a1a1a; white-space: pre-line; border: 1px solid rgba(0,0,0,0.06); max-height: 180px; overflow-y: auto; }
+
+/* Dicas accordion */
+.cfg-dica-card { padding: 0; overflow: hidden; }
+.cfg-dica-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: none; background: transparent; cursor: pointer; font-family: inherit; text-align: left; }
+.cfg-dica-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.cfg-dica-titulo { flex: 1; font-size: 14px; font-weight: 800; color: var(--ink); }
+.cfg-dica-chevron { font-size: 20px; color: var(--ink-mute); transition: transform 0.2s; display: block; line-height: 1; }
+.cfg-dica-chevron.open { transform: rotate(90deg); }
+.cfg-dica-lista { padding: 0 16px 16px 52px; display: flex; flex-direction: column; gap: 8px; }
+.cfg-dica-lista li { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+
+/* Steps */
+.cfg-steps { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.cfg-step { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.cfg-step-n { background: var(--rose); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+/* Danger zone */
+.cfg-danger-actions { display: flex; flex-direction: column; gap: 12px; }
+.cfg-danger-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.cfg-danger-title { font-size: 13px; font-weight: 800; color: #b85050; margin-bottom: 2px; }
+.cfg-danger-desc { font-size: 12px; color: var(--ink-mute); line-height: 1.5; }
+.cfg-body-text { font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 14px; }
+
+/* About */
+.cfg-about { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0 4px; text-align: center; }
+.cfg-about-logo { font-size: 40px; }
+.cfg-about-nome { font-size: 16px; font-weight: 800; color: var(--ink); }
+.cfg-about-desc { font-size: 12px; color: var(--ink-soft); }
+.cfg-about-versao { font-size: 11px; color: var(--ink-mute); margin-top: 4px; }
+
 /* ─── Field ─── */
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
 .field-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--rose-d); font-weight: 800; }
@@ -825,17 +907,21 @@ body {
   .ped-actions { gap: 8px; flex-wrap: wrap; }
   .ped-actions button { min-height: 52px; flex: 1; justify-content: center; font-size: 14px; }
 
-  /* Bottom nav — ícones e labels maiores */
+  /* Bottom nav — scrollable com todos os itens */
   .rj-bn {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
     background: rgba(255,245,248,0.97); backdrop-filter: blur(20px);
     border-top: 1.5px solid var(--line);
-    padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
-    justify-content: space-around;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
   }
-  .bn-item { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-mute); font-family: inherit; font-size: 10px; font-weight: 700; padding: 6px 4px; border-radius: 12px; position: relative; flex: 1; z-index: 1; min-height: 60px; justify-content: center; }
+  .rj-bn::-webkit-scrollbar { display: none; }
+  .bn-item { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink-mute); font-family: inherit; font-size: 10px; font-weight: 700; padding: 6px 8px; border-radius: 12px; position: relative; flex: 0 0 auto; min-width: 62px; z-index: 1; min-height: 56px; justify-content: center; }
   .bn-item.active { color: var(--rose-d); background: var(--rose-pale); }
-  .bn-badge { position: absolute; top: 2px; right: 14%; background: var(--rose-d); color: #fff; border-radius: 8px; padding: 1px 6px; font-size: 10px; }
+  .bn-badge { position: absolute; top: 2px; right: 10px; background: var(--rose-d); color: #fff; border-radius: 8px; padding: 1px 6px; font-size: 10px; }
 
   /* Topbar */
   .topbar-title { font-size: 26px; }
@@ -927,6 +1013,18 @@ body {
   /* Cliente e nova cli */
   .btn-nova-cli { height: 52px; font-size: 14px; padding: 0 16px; }
   .ped-cli-row select { min-height: 52px; font-size: 16px; }
+
+  /* Config — mobile */
+  .cfg-tabs { gap: 4px; padding: 4px; }
+  .cfg-tab { padding: 8px 2px; font-size: 10px; }
+  .cfg-tab-icon { font-size: 16px; }
+  .config-row { grid-template-columns: 1fr; }
+  .cfg-preview-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .cfg-insert-bar { gap: 4px; }
+  .cfg-insert-btn { font-size: 10px; padding: 2px 6px; }
+  .cfg-vars-grid { gap: 4px; }
+  .cfg-var-chip { padding: 4px 8px; }
+  .cfg-danger-item { flex-direction: column; }
 }
 
 @media (max-width: 420px) {

@@ -88,13 +88,15 @@ export const NAV: [string, string][] = [
   ['config',     'Ajustes'],
 ];
 
-// Bottom nav shows only the 5 most used tabs on mobile
+// Bottom nav — all 7 tabs, scrollable on mobile
 export const BOTTOM_NAV: [string, string][] = [
   ['dash',       'Início'],
   ['pedidos',    'Pedidos'],
+  ['clientes',   'Clientes'],
   ['analiticos', 'Análise'],
   ['caixa',      'Caixa'],
-  ['clientes',   'Clientes'],
+  ['catalogo',   'Catálogo'],
+  ['config',     'Ajustes'],
 ];
 
 export const CFG0: Config = {
