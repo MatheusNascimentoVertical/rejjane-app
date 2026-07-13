@@ -1,40 +1,128 @@
-import { hoje, fmtData, fmtR$ } from '../lib/helpers';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { hoje, fmtData, fmtR$, diasAte } from '../lib/helpers';
 import { MARCAS } from '../data/constants';
-import type { AppCtx } from '../types';
+import type { AppCtx, Pedido } from '../types';
 
 type Props = { ctx: AppCtx };
 
+const MES_NOMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function fmtMesLabel(s: string) {
+  const [y, m] = s.split('-').map(Number);
+  return `${MES_NOMES[m - 1]} ${y}`;
+}
+
+function addMes(s: string, delta: number) {
+  const [y, m] = s.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export function Caixa({ ctx }: Props) {
-  const { fin, recMes, despMes, setModal, peds } = ctx;
-  const saldo = recMes - despMes;
-  const mes = hoje().slice(0, 7);
+  const { fin, setFin, setModal, peds, prods } = ctx;
+  const meAtual = hoje().slice(0, 7);
+  const [mes, setMes] = useState(meAtual);
 
-  const recPorMarca = MARCAS.map(m => {
-    const total = peds
-      .filter(p => p.data.startsWith(mes) && p.st !== 'cancelado')
-      .reduce((sum, p) => {
-        const contrib = (p.itens ?? []).reduce((s, it) => {
-          const prod = it.prodId;
-          const isMarca = prod.startsWith(m.id.toLowerCase().slice(0, 3));
-          return s + (isMarca ? it.qtd * it.vUnit : 0);
-        }, 0);
-        return sum + contrib;
-      }, 0);
-    const entradas = fin
-      .filter(f => f.tipo === 'entrada' && f.data.startsWith(mes) && f.desc.toLowerCase().includes(m.nome.toLowerCase()))
-      .reduce((a, b) => a + b.valor, 0);
-    return { ...m, total: entradas };
+  const mesPeds  = peds.filter(p => p.data.startsWith(mes) && p.st !== 'cancelado');
+  const lancsMes = [...fin].filter(f => f.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id);
+
+  const recMes  = fin.filter(f => f.tipo === 'entrada' && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
+  const despMes = fin.filter(f => f.tipo === 'saida'   && f.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
+  const saldo   = recMes - despMes;
+
+  const ticketMedio = mesPeds.length > 0
+    ? mesPeds.reduce((s, p) => s + p.vTotal, 0) / mesPeds.length
+    : 0;
+
+  const pedsPagos = peds.filter(p => p.st === 'pago' && p.data.startsWith(mes)).length;
+
+  // A receber: all non-cancelled, non-paid orders with balance
+  const aReceberList = peds
+    .filter(p => p.st !== 'cancelado' && p.st !== 'pago' && (p.vTotal - p.sinal) > 0)
+    .sort((a, b) => {
+      const dataA = a.vencimento || a.prazo;
+      const dataB = b.vencimento || b.prazo;
+      return dataA.localeCompare(dataB);
+    });
+  const totalAReceber = aReceberList.reduce((s, p) => s + (p.vTotal - p.sinal), 0);
+
+  // Upcoming charges (next 14 days)
+  const hoje_ = hoje();
+  type ProxItem = { ped: Pedido; data: string; valor: number; tipo: 'vencimento' | 'parcela'; parcelaIdx?: number };
+  const proximas: ProxItem[] = [];
+  peds.forEach(p => {
+    if (p.st === 'cancelado' || p.st === 'pago') return;
+    const rest = p.vTotal - p.sinal;
+    if (rest <= 0) return;
+    if (p.parcelas && p.parcelas.length > 0) {
+      p.parcelas.forEach((parc, idx) => {
+        if (!parc.pago && parc.data >= hoje_) {
+          const d = diasAte(parc.data);
+          if (d <= 14) proximas.push({ ped: p, data: parc.data, valor: parc.valor, tipo: 'parcela', parcelaIdx: idx });
+        }
+      });
+    } else if (p.vencimento && p.vencimento >= hoje_) {
+      const d = diasAte(p.vencimento);
+      if (d <= 14) proximas.push({ ped: p, data: p.vencimento, valor: rest, tipo: 'vencimento' });
+    }
   });
+  proximas.sort((a, b) => a.data.localeCompare(b.data));
 
-  const totalEntradas = recPorMarca.reduce((a, b) => a + b.total, 0);
+  // Brand performance using actual order+product data
+  const recPorMarca = MARCAS.map(m => {
+    const total = mesPeds.reduce((sum, p) =>
+      sum + (p.itens ?? []).reduce((s, it) => {
+        const prod = prods.find(x => x.id === it.prodId);
+        return s + (prod?.marca === m.id ? it.qtd * it.vUnit : 0);
+      }, 0), 0);
+    return { ...m, total };
+  }).filter(m => m.total > 0).sort((a, b) => b.total - a.total);
+  const totalMarca = recPorMarca.reduce((a, b) => a + b.total, 0);
+
+  // Best-selling product this month
+  const prodVendas: Record<string, { nome: string; icon: string; total: number; qtd: number }> = {};
+  mesPeds.forEach(p => {
+    (p.itens ?? []).forEach(it => {
+      const prod = prods.find(x => x.id === it.prodId);
+      if (!prod) return;
+      if (!prodVendas[it.prodId]) prodVendas[it.prodId] = { nome: prod.nome, icon: prod.icon, total: 0, qtd: 0 };
+      prodVendas[it.prodId].total += it.qtd * it.vUnit;
+      prodVendas[it.prodId].qtd   += it.qtd;
+    });
+  });
+  const topProd = Object.values(prodVendas).sort((a, b) => b.total - a.total)[0];
+
+  const deleteLanc = (id: number) => setFin(fs => fs.filter(f => f.id !== id));
 
   return (
     <div className="caixa">
+
+      {/* Month nav */}
+      <div className="cx-month-nav">
+        <button className="cx-month-btn" onClick={() => setMes(m => addMes(m, -1))}>‹</button>
+        <span className="cx-month-label">{fmtMesLabel(mes)}</span>
+        <button
+          className="cx-month-btn"
+          onClick={() => setMes(m => addMes(m, 1))}
+          disabled={addMes(mes, 1) > meAtual}
+        >›</button>
+        {mes !== meAtual && (
+          <button className="cx-month-hoje" onClick={() => setMes(meAtual)}>Mês atual</button>
+        )}
+      </div>
+
+      {/* Hero */}
       <div className="caixa-hero">
         <div className="caixa-hero-l">
           <div className="card-eyebrow">Saldo do mês</div>
           <div className={`caixa-saldo${saldo >= 0 ? ' sage' : ' red'}`}>{fmtR$(saldo)}</div>
-          <div className="caixa-saldo-sub">Entradas {fmtR$(recMes)} · Saídas {fmtR$(despMes)}</div>
+          <div className="caixa-saldo-sub">
+            <span className="sage">▲ {fmtR$(recMes)}</span>
+            {' entradas · '}
+            <span className="peach">▼ {fmtR$(despMes)}</span>
+            {' saídas'}
+          </div>
         </div>
         <div className="caixa-hero-actions">
           <button className="btn-primary" onClick={() => setModal({ tipo: 'fin', dados: { tipo: 'entrada' } })}>+ Entrada</button>
@@ -42,37 +130,167 @@ export function Caixa({ ctx }: Props) {
         </div>
       </div>
 
-      <div className="caixa-split">
+      {/* Metrics */}
+      <div className="cx-metrics">
+        <div className="cx-metric">
+          <div className="cx-metric-icon">📦</div>
+          <div className="cx-metric-val">{mesPeds.length}</div>
+          <div className="cx-metric-label">Pedidos no mês</div>
+        </div>
+        <div className="cx-metric">
+          <div className="cx-metric-icon">🎯</div>
+          <div className="cx-metric-val">{ticketMedio > 0 ? fmtR$(ticketMedio) : '—'}</div>
+          <div className="cx-metric-label">Ticket médio</div>
+        </div>
+        <div className="cx-metric cx-metric-destaque">
+          <div className="cx-metric-icon">⏳</div>
+          <div className="cx-metric-val" style={{ color: 'var(--rose-d)' }}>{fmtR$(totalAReceber)}</div>
+          <div className="cx-metric-label">A receber</div>
+        </div>
+        <div className="cx-metric">
+          <div className="cx-metric-icon">✅</div>
+          <div className="cx-metric-val sage">{pedsPagos}</div>
+          <div className="cx-metric-label">Pedidos pagos</div>
+        </div>
+      </div>
+
+      {topProd && (
+        <div className="cx-top-prod">
+          <span className="cx-top-prod-icon">{topProd.icon}</span>
+          <div className="cx-top-prod-info">
+            <div className="cx-top-prod-label">Produto destaque do mês</div>
+            <div className="cx-top-prod-nome">{topProd.nome}</div>
+          </div>
+          <div className="cx-top-prod-val">
+            <strong>{fmtR$(topProd.total)}</strong>
+            <span>{topProd.qtd} unid.</span>
+          </div>
+        </div>
+      )}
+
+      {/* A receber */}
+      {aReceberList.length > 0 && (
         <div className="card-soft">
           <div className="card-head">
             <div>
-              <div className="card-eyebrow">Por marca</div>
-              <h3 className="card-title">Entradas do mês</h3>
+              <div className="card-eyebrow">Cobranças pendentes</div>
+              <h3 className="card-title">
+                A receber
+                <span className="cx-badge-val">{fmtR$(totalAReceber)}</span>
+              </h3>
+            </div>
+          </div>
+          <div className="cx-receber-list">
+            {aReceberList.slice(0, 8).map(p => {
+              const rest = p.vTotal - p.sinal;
+              const refData = p.vencimento || (p.parcelas?.find(pc => !pc.pago)?.data) || p.prazo;
+              const dias = diasAte(refData);
+              return (
+                <div key={p.id} className={`cx-receber-row${dias < 0 ? ' late' : dias <= 3 ? ' warn' : ''}`}>
+                  <div className="cx-receber-info">
+                    <span className="cx-receber-nome">{p.cliNome}</span>
+                    <span className="cx-receber-meta">#{p.id} · {p.itens?.length ?? 0} prod.</span>
+                  </div>
+                  <div className="cx-receber-r">
+                    <strong className="cx-receber-val">{fmtR$(rest)}</strong>
+                    <span className={`cx-receber-prazo${dias < 0 ? ' late' : dias <= 3 ? ' warn' : ''}`}>
+                      {dias < 0 ? `${Math.abs(dias)}d atraso` : dias === 0 ? 'hoje' : `em ${dias}d`}
+                    </span>
+                  </div>
+                  <motion.button
+                    className="btn-cobrar-sm"
+                    onClick={() => setModal({ tipo: 'wpp', ped: p, msgTipo: 'cobranca' })}
+                    whileTap={{ scale: 0.94 }}
+                  >💰</motion.button>
+                </div>
+              );
+            })}
+            {aReceberList.length > 8 && (
+              <div className="cx-receber-more">+{aReceberList.length - 8} mais pendentes</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming charges */}
+      {proximas.length > 0 && (
+        <div className="card-soft">
+          <div className="card-head">
+            <div>
+              <div className="card-eyebrow">Próximos 14 dias</div>
+              <h3 className="card-title">Cobranças agendadas</h3>
+            </div>
+          </div>
+          <div className="cx-proximas">
+            {proximas.map((item, i) => {
+              const d = diasAte(item.data);
+              return (
+                <div key={i} className="cx-prox-row">
+                  <div className={`cx-prox-badge${d === 0 ? ' hoje' : d <= 3 ? ' warn' : ''}`}>
+                    {d === 0 ? 'Hoje' : d === 1 ? 'Amanhã' : fmtData(item.data)}
+                  </div>
+                  <div className="cx-prox-info">
+                    <span className="cx-prox-nome">{item.ped.cliNome}</span>
+                    <span className="cx-prox-tipo">
+                      {item.tipo === 'parcela' ? `${(item.parcelaIdx ?? 0) + 1}ª parcela` : 'Vencimento'}
+                    </span>
+                  </div>
+                  <strong className="cx-prox-val">{fmtR$(item.valor)}</strong>
+                  <motion.button
+                    className="btn-cobrar-sm"
+                    onClick={() => setModal({ tipo: 'wpp', ped: item.ped, msgTipo: 'cobranca' })}
+                    whileTap={{ scale: 0.94 }}
+                  >💰</motion.button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Brand performance */}
+      {recPorMarca.length > 0 && (
+        <div className="card-soft">
+          <div className="card-head">
+            <div>
+              <div className="card-eyebrow">Desempenho {fmtMesLabel(mes)}</div>
+              <h3 className="card-title">Por marca</h3>
             </div>
           </div>
           {recPorMarca.map(m => {
-            const pct = totalEntradas > 0 ? (m.total / totalEntradas) * 100 : 0;
+            const pct = totalMarca > 0 ? (m.total / totalMarca) * 100 : 0;
             return (
               <div key={m.id} className="op-row">
                 <div className="op-row-head">
                   <span className="op-name" style={{ color: m.cor }}>{m.icon} {m.nome}</span>
-                  <strong>{fmtR$(m.total)}</strong>
+                  <div className="op-row-r">
+                    <strong>{fmtR$(m.total)}</strong>
+                    <span className="op-pct">{pct.toFixed(0)}%</span>
+                  </div>
                 </div>
                 <div className="op-bar"><div className="op-bar-fill" style={{ width: pct + '%', background: m.cor }} /></div>
               </div>
             );
           })}
         </div>
+      )}
 
-        <div className="card-soft">
-          <div className="card-head">
-            <div>
-              <div className="card-eyebrow">Histórico</div>
-              <h3 className="card-title">Lançamentos</h3>
-            </div>
+      {/* Lançamentos */}
+      <div className="card-soft">
+        <div className="card-head">
+          <div>
+            <div className="card-eyebrow">{fmtMesLabel(mes)}</div>
+            <h3 className="card-title">
+              Lançamentos
+              {lancsMes.length > 0 && <span className="cx-badge-count">{lancsMes.length}</span>}
+            </h3>
           </div>
+        </div>
+        {lancsMes.length === 0 ? (
+          <div className="cx-empty-lanc">Nenhum lançamento neste mês</div>
+        ) : (
           <div className="lanc-list">
-            {[...fin].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 15).map(f => (
+            {lancsMes.map(f => (
               <div key={f.id} className="lanc-row">
                 <div className={`lanc-icon ${f.tipo}`}>
                   {f.tipo === 'entrada'
@@ -86,10 +304,11 @@ export function Caixa({ ctx }: Props) {
                 <strong className={`lanc-val ${f.tipo === 'entrada' ? 'sage' : 'peach'}`}>
                   {f.tipo === 'entrada' ? '+' : '−'} {fmtR$(f.valor)}
                 </strong>
+                <button className="lanc-del" onClick={() => deleteLanc(f.id)} title="Remover">×</button>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
