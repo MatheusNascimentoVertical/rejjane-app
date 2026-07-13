@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { SlidingIndicator } from './SlidingIndicator';
 import { NavIcon } from './NavIcon';
-import { NAV } from '../data/constants';
+import { BOTTOM_NAV } from '../data/constants';
 import type { Pedido } from '../types';
 import type { Aba } from '../App';
 
@@ -14,7 +14,7 @@ export function BottomNav({ aba, setAba, atrasados }: Props) {
   return (
     <nav className="rj-bn" ref={navRef}>
       <SlidingIndicator activeKey={aba} containerRef={navRef} color="rgba(233,30,99,0.14)" />
-      {NAV.map(([id, label]) => (
+      {BOTTOM_NAV.map(([id, label]) => (
         <motion.button
           key={id}
           data-key={id}

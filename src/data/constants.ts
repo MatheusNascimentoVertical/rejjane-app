@@ -79,12 +79,22 @@ export const PROX: Partial<Record<PedStatus, PedStatus>> = {
 };
 
 export const NAV: [string, string][] = [
-  ['dash',     'Início'],
-  ['pedidos',  'Pedidos'],
-  ['clientes', 'Clientes'],
-  ['catalogo', 'Catálogo'],
-  ['caixa',    'Caixa'],
-  ['config',   'Ajustes'],
+  ['dash',       'Início'],
+  ['pedidos',    'Pedidos'],
+  ['clientes',   'Clientes'],
+  ['catalogo',   'Catálogo'],
+  ['caixa',      'Caixa'],
+  ['analiticos', 'Análise'],
+  ['config',     'Ajustes'],
+];
+
+// Bottom nav shows only the 5 most used tabs on mobile
+export const BOTTOM_NAV: [string, string][] = [
+  ['dash',       'Início'],
+  ['pedidos',    'Pedidos'],
+  ['analiticos', 'Análise'],
+  ['caixa',      'Caixa'],
+  ['clientes',   'Clientes'],
 ];
 
 export const CFG0: Config = {

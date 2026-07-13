@@ -14,15 +14,16 @@ import { BottomNav } from './components/BottomNav';
 import { Login } from './pages/Login';
 import { ModalRoot } from './modals/ModalRoot';
 
-const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
-const Pedidos   = lazy(() => import('./pages/Pedidos').then(m => ({ default: m.Pedidos })));
-const Clientes  = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
-const Catalogo  = lazy(() => import('./pages/Catalogo').then(m => ({ default: m.Catalogo })));
-const Caixa     = lazy(() => import('./pages/Caixa').then(m => ({ default: m.Caixa })));
-const Config    = lazy(() => import('./pages/Config').then(m => ({ default: m.Config })));
+const Dashboard   = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Pedidos     = lazy(() => import('./pages/Pedidos').then(m => ({ default: m.Pedidos })));
+const Clientes    = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
+const Catalogo    = lazy(() => import('./pages/Catalogo').then(m => ({ default: m.Catalogo })));
+const Caixa       = lazy(() => import('./pages/Caixa').then(m => ({ default: m.Caixa })));
+const Config      = lazy(() => import('./pages/Config').then(m => ({ default: m.Config })));
+const Analiticos  = lazy(() => import('./pages/Analiticos').then(m => ({ default: m.Analiticos })));
 import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm, Produto } from './types';
 
-export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'config';
+export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'analiticos' | 'config';
 
 const DEMO = import.meta.env.VITE_DEMO === 'true';
 
@@ -258,12 +259,13 @@ export default function App() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             >
-              {aba === 'dash'     && <Dashboard ctx={ctx} setAba={setAba} />}
-              {aba === 'pedidos'  && <Pedidos   ctx={ctx} />}
-              {aba === 'clientes' && <Clientes  ctx={ctx} />}
-              {aba === 'catalogo' && <Catalogo  ctx={ctx} />}
-              {aba === 'caixa'    && <Caixa     ctx={ctx} />}
-              {aba === 'config'   && <Config    ctx={ctx} />}
+              {aba === 'dash'       && <Dashboard   ctx={ctx} setAba={setAba} />}
+              {aba === 'pedidos'    && <Pedidos     ctx={ctx} />}
+              {aba === 'clientes'   && <Clientes    ctx={ctx} />}
+              {aba === 'catalogo'   && <Catalogo    ctx={ctx} />}
+              {aba === 'caixa'      && <Caixa       ctx={ctx} />}
+              {aba === 'analiticos' && <Analiticos  ctx={ctx} />}
+              {aba === 'config'     && <Config      ctx={ctx} />}
             </motion.div>
           </AnimatePresence>
         </Suspense>
