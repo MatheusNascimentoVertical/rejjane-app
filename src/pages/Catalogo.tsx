@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MARCAS, getMarca } from '../data/constants';
+import { MARCAS } from '../data/constants';
 import { fmtR$ } from '../lib/helpers';
 import type { AppCtx } from '../types';
 
 type Props = { ctx: AppCtx };
 
 export function Catalogo({ ctx }: Props) {
-  const { prods, peds, setModal } = ctx;
+  const { prods, setProds, peds, setModal } = ctx;
   const [marcaAtiva, setMarcaAtiva] = useState('Todos');
   const [catAtiva, setCatAtiva] = useState('Todos');
+  const [busca, setBusca] = useState('');
 
   const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
-
-  const filtered = prods
-    .filter(p => marcaAtiva === 'Todos' || p.marca === marcaAtiva)
-    .filter(p => catAtiva === 'Todos' || p.cat === catAtiva)
-    .slice()
-    .sort((a, b) => vendidos(b.id) - vendidos(a.id));
-
-  const totalMarcas = new Set(prods.map(p => p.marca)).size;
-  const totalCats = new Set(prods.map(p => p.cat)).size;
 
   function vendidos(id: string) {
     return peds.reduce((sum, p) => {
@@ -29,34 +21,32 @@ export function Catalogo({ ctx }: Props) {
     }, 0);
   }
 
-  const estoqueLabel = (est: number) => {
-    if (est === 0) return { label: 'ESGOTADO', cls: 'red' };
-    if (est <= 5)  return { label: `${est} un`, cls: 'yellow' };
-    return { label: `${est} un`, cls: 'green' };
-  };
+  const filtered = prods
+    .filter(p => marcaAtiva === 'Todos' || p.marca === marcaAtiva)
+    .filter(p => catAtiva === 'Todos' || p.cat === catAtiva)
+    .filter(p => !busca.trim() || p.nome.toLowerCase().includes(busca.toLowerCase()) || p.marca.toLowerCase().includes(busca.toLowerCase()))
+    .slice()
+    .sort((a, b) => vendidos(b.id) - vendidos(a.id));
+
+  const updEstoque = (id: string, delta: number) =>
+    setProds(ps => ps.map(p => p.id === id ? { ...p, estoque: Math.max(0, (p.estoque ?? 0) + delta) } : p));
+
+  const ativos = prods.filter(p => p.ativo).length;
 
   return (
-    <div className="catalogo cat-v2">
-      <div className="cat-v2-header">
+    <div className="catalogo">
+      <div className="cat-header">
         <div>
           <div className="card-eyebrow">Gestão de Produtos</div>
           <h2 className="topbar-title">Catálogo</h2>
         </div>
-        <div className="cat-v2-stats">
-          <div className="cat-v2-stat">
-            <span className="cat-v2-stat-val">{prods.length}</span>
-            <span className="cat-v2-stat-lbl">Produtos</span>
-          </div>
-          <div className="cat-v2-stat">
-            <span className="cat-v2-stat-val">{totalMarcas}</span>
-            <span className="cat-v2-stat-lbl">Marcas</span>
-          </div>
-          <div className="cat-v2-stat">
-            <span className="cat-v2-stat-val">{totalCats}</span>
-            <span className="cat-v2-stat-lbl">Categorias</span>
+        <div className="cat-header-right">
+          <div className="cat-stats">
+            <span><b>{prods.length}</b> produtos</span>
+            <span><b>{ativos}</b> ativos</span>
           </div>
           <motion.button
-            className="btn-primary cat-fab"
+            className="btn-primary"
             onClick={() => setModal({ tipo: 'prod' })}
             whileHover={{ translateY: -2 }}
             whileTap={{ scale: 0.96 }}
@@ -66,92 +56,94 @@ export function Catalogo({ ctx }: Props) {
         </div>
       </div>
 
-      <div className="cat-filter-section">
-        <div className="cat-filter-label">Marca</div>
-        <div className="cat-filter-row">
+      <input
+        className="cat-search"
+        placeholder="Buscar produto ou marca..."
+        value={busca}
+        onChange={e => setBusca(e.target.value)}
+      />
+
+      <div className="cat-filter-row">
+        <button className={`cat-pill${marcaAtiva === 'Todos' ? ' active' : ''}`} onClick={() => setMarcaAtiva('Todos')}>Todas</button>
+        {MARCAS.map(m => (
           <button
-            className={`cat-pill${marcaAtiva === 'Todos' ? ' active' : ''}`}
-            onClick={() => setMarcaAtiva('Todos')}
+            key={m.id}
+            className={`cat-pill${marcaAtiva === m.id ? ' active' : ''}`}
+            onClick={() => setMarcaAtiva(m.id)}
+            style={marcaAtiva === m.id ? { background: m.bg, color: m.cor, borderColor: m.cor + '55' } : {}}
           >
-            Todas
+            {m.icon} {m.nome}
           </button>
-          {MARCAS.map(m => (
-            <button
-              key={m.id}
-              className={`cat-pill cat-pill-marca${marcaAtiva === m.id ? ' active' : ''}`}
-              onClick={() => setMarcaAtiva(m.id)}
-              style={marcaAtiva === m.id ? { background: m.bg, color: m.cor, borderColor: m.cor + '55' } : {}}
-            >
-              {m.icon} {m.nome}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
-      <div className="cat-filter-section">
-        <div className="cat-filter-label">Categoria</div>
-        <div className="cat-filter-row">
-          {cats.map(cat => (
-            <button
-              key={cat}
-              className={`cat-pill${catAtiva === cat ? ' active' : ''}`}
-              onClick={() => setCatAtiva(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      <div className="cat-filter-row">
+        {cats.map(cat => (
+          <button
+            key={cat}
+            className={`cat-pill${catAtiva === cat ? ' active' : ''}`}
+            onClick={() => setCatAtiva(cat)}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
-      <div className="cat-grid-v2">
+      <div className="cat-list">
+        {filtered.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-glyph">🌸</div>
+            <p>Nenhum produto encontrado</p>
+          </div>
+        )}
         <AnimatePresence mode="popLayout">
           {filtered.map((p, i) => {
             const sold = vendidos(p.id);
-            const est  = estoqueLabel(p.estoque ?? 0);
-            const marca = getMarca(p.marca);
+            const est = p.estoque ?? 0;
             return (
               <motion.div
                 key={p.id}
-                className="cat-card-v2"
+                className={`cat-row${!p.ativo ? ' cat-row-inativo' : ''}`}
                 layout
-                initial={{ opacity: 0, y: 20, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ delay: i * 0.04, type: 'spring', stiffness: 320, damping: 26 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ delay: i * 0.025, duration: 0.22 }}
               >
-                <div className="cat-photo">
-                  <div className="cat-photo-inner">
-                    {p.fotoUrl
-                      ? <img src={p.fotoUrl} alt={p.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div className="cat-photo-emoji">{p.icon}</div>
-                    }
-                    {p.destaque && <div className="cat-destaque-badge">DESTAQUE</div>}
-                    <div className={`cat-stock-badge ${est.cls}`}>{est.label}</div>
-                    {!p.ativo && <div className="cat-inativo-overlay">INATIVO</div>}
+                <div className="cat-row-thumb">
+                  {p.fotoUrl
+                    ? <img src={p.fotoUrl} alt={p.nome} />
+                    : <span className="cat-row-emoji">{p.icon}</span>
+                  }
+                </div>
+
+                <div className="cat-row-info">
+                  <div className="cat-row-nome">
+                    {p.nome}
+                    {p.destaque && <span className="cat-row-star">★</span>}
+                    {!p.ativo && <span className="cat-row-badge-off">inativo</span>}
+                  </div>
+                  <div className="cat-row-sub">
+                    <span className="cat-row-marca">{p.marca}</span>
+                    <span className="cat-row-cat">{p.cat}</span>
+                    {sold > 0 && <span className="cat-row-sold">{sold} vendidos</span>}
                   </div>
                 </div>
-                <div className="cat-card-body">
-                  {marca && (
-                    <div className="cat-marca-badge" style={{ color: marca.cor, background: marca.bg }}>
-                      {marca.icon} {marca.nome}
-                    </div>
-                  )}
-                  <div className="cat-cat-chip">{p.cat}</div>
-                  <div className="cat-card-name">{p.nome}</div>
-                  <div className="cat-price-row">
-                    <span className="cat-price">{fmtR$(p.preco)}</span>
-                    {p.precoDe && <span className="cat-price-de">{fmtR$(p.precoDe)}</span>}
-                  </div>
-                  <div className="cat-sold">{sold} vendidos</div>
+
+                <div className="cat-row-preco">{fmtR$(p.preco)}</div>
+
+                <div className="cat-row-est">
+                  <button className="cat-est-btn" onClick={() => updEstoque(p.id, -1)}>−</button>
+                  <span className={`cat-est-num${est === 0 ? ' zero' : ''}`} title="Unidades em mãos">{est}</span>
+                  <button className="cat-est-btn" onClick={() => updEstoque(p.id, 1)}>+</button>
                 </div>
-                <div className="cat-card-actions">
-                  <button
-                    className="btn-soft-sm"
-                    onClick={() => setModal({ tipo: 'prod', dados: p })}
-                  >
-                    Editar
-                  </button>
-                </div>
+
+                <button
+                  className="btn-soft-sm cat-row-edit"
+                  onClick={() => setModal({ tipo: 'prod', dados: p })}
+                >
+                  Editar
+                </button>
               </motion.div>
             );
           })}
