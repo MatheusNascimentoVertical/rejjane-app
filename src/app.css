@@ -424,6 +424,14 @@ body {
 .cat-row-toggle.on { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
 .cat-row-toggle:hover { opacity: 0.8; }
 .cat-row-edit { flex-shrink: 0; }
+.cat-row-del {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1.5px solid var(--line); background: transparent;
+  color: var(--ink-mute); cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-row-del:hover { background: #fde8e8; border-color: #e57373; color: #c62828; }
 
 /* ─── Caixa ─── */
 .caixa { display: flex; flex-direction: column; gap: 18px; }

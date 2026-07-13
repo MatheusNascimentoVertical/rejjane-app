@@ -34,6 +34,13 @@ export function Catalogo({ ctx }: Props) {
   const toggleAtivo = (id: string) =>
     setProds(ps => ps.map(p => p.id === id ? { ...p, ativo: !p.ativo } : p));
 
+  const excluir = (id: string, nome: string, qtdPedidos: number) => {
+    const aviso = qtdPedidos > 0
+      ? `"${nome}" já foi vendido em ${qtdPedidos} pedido(s). O histórico de pedidos é mantido, mas o produto será removido do catálogo permanentemente.\n\nDeseja excluir mesmo assim?`
+      : `Excluir "${nome}" do catálogo permanentemente?`;
+    if (confirm(aviso)) setProds(ps => ps.filter(p => p.id !== id));
+  };
+
   const ativos = prods.filter(p => p.ativo).length;
 
   return (
@@ -154,6 +161,16 @@ export function Catalogo({ ctx }: Props) {
                   onClick={() => setModal({ tipo: 'prod', dados: p })}
                 >
                   Editar
+                </button>
+
+                <button
+                  className="cat-row-del"
+                  onClick={() => excluir(p.id, p.nome, sold)}
+                  title="Excluir produto do catálogo"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
                 </button>
               </motion.div>
             );
