@@ -506,6 +506,58 @@ body {
 
 .cx-empty-lanc { padding: 20px 0; text-align: center; color: var(--ink-mute); font-size: 13px; }
 
+/* ─── Previsão de recebimentos por mês ─── */
+.cx-prev-card { padding: 18px 18px 14px; }
+.cx-prev-sub { font-size: 12px; color: var(--ink-mute); margin-bottom: 16px; line-height: 1.5; }
+.cx-prev-scroll {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.cx-prev-scroll::-webkit-scrollbar { display: none; }
+.cx-prev-col {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 70px; padding: 8px 4px; border-radius: 12px;
+  transition: background 0.15s;
+}
+.cx-prev-col.current { background: var(--rose-pale); }
+.cx-prev-col.past { opacity: 0.45; }
+.cx-prev-val { font-size: 10px; font-weight: 800; color: var(--ink-2); text-align: center; min-height: 16px; font-variant-numeric: tabular-nums; }
+.cx-prev-col.current .cx-prev-val { color: var(--rose-d); }
+.cx-prev-bar-wrap {
+  width: 32px; height: 80px; background: var(--cream-2);
+  border-radius: 8px; overflow: hidden; display: flex; align-items: flex-end;
+  border: 1px solid var(--line);
+}
+.cx-prev-bar-fill {
+  width: 100%; background: var(--rose-l); border-radius: 6px 6px 0 0;
+  min-height: 3px;
+}
+.cx-prev-col.current .cx-prev-bar-fill { background: var(--rose); }
+.cx-prev-mes { font-size: 11px; font-weight: 800; color: var(--ink-mute); }
+.cx-prev-col.current .cx-prev-mes { color: var(--rose-d); }
+.cx-prev-n { font-size: 9px; color: var(--ink-mute); font-weight: 700; }
+
+/* ─── MFin melhorado ─── */
+.fin-tipo-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.fin-tipo-btn {
+  flex: 1; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line-2);
+  background: var(--cream-2); color: var(--ink-mute); font-family: inherit;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+}
+.fin-tipo-btn.active-entrada { background: rgba(90,155,122,0.12); border-color: #5a9b7a; color: #5a9b7a; }
+.fin-tipo-btn.active-saida   { background: rgba(255,64,129,0.1);  border-color: var(--rose); color: var(--rose-d); }
+.fin-chips-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 8px; }
+.fin-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.fin-chip {
+  display: flex; align-items: center; gap: 5px; padding: 7px 12px;
+  border-radius: 20px; border: 1.5px solid var(--line-2);
+  background: var(--cream-2); color: var(--ink-2);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.fin-chip:hover { border-color: var(--rose-l); background: var(--rose-pale); color: var(--rose-d); }
+.fin-chip.active { background: var(--rose-pale); border-color: var(--rose); color: var(--rose-d); }
+
 /* ─── Análise (Analiticos) ─── */
 .analiticos { display: flex; flex-direction: column; gap: 18px; }
 
@@ -1013,6 +1065,13 @@ body {
   /* Cliente e nova cli */
   .btn-nova-cli { height: 52px; font-size: 14px; padding: 0 16px; }
   .ped-cli-row select { min-height: 52px; font-size: 16px; }
+
+  /* Previsão por mês + MFin — mobile */
+  .cx-prev-bar-wrap { height: 60px; }
+  .cx-prev-col { min-width: 62px; }
+  .cx-prev-val { font-size: 9px; }
+  .fin-chips { gap: 5px; }
+  .fin-chip { font-size: 11px; padding: 6px 10px; }
 
   /* Config — mobile */
   .cfg-tabs { gap: 4px; padding: 4px; }

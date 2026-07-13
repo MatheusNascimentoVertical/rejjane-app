@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { hoje, fmtData, fmtR$, diasAte } from '../lib/helpers';
 import { MARCAS } from '../data/constants';
@@ -7,10 +7,15 @@ import type { AppCtx, Pedido } from '../types';
 type Props = { ctx: AppCtx };
 
 const MES_NOMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MES_NOMES_LONG = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 function fmtMesLabel(s: string) {
   const [y, m] = s.split('-').map(Number);
   return `${MES_NOMES[m - 1]} ${y}`;
+}
+function fmtMesLong(s: string) {
+  const [, m] = s.split('-').map(Number);
+  return MES_NOMES_LONG[m - 1];
 }
 
 function addMes(s: string, delta: number) {
@@ -23,6 +28,7 @@ export function Caixa({ ctx }: Props) {
   const { fin, setFin, setModal, peds, prods } = ctx;
   const meAtual = hoje().slice(0, 7);
   const [mes, setMes] = useState(meAtual);
+  const hoje_ = hoje();
 
   const mesPeds  = peds.filter(p => p.data.startsWith(mes) && p.st !== 'cancelado');
   const lancsMes = [...fin].filter(f => f.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id);
@@ -37,18 +43,45 @@ export function Caixa({ ctx }: Props) {
 
   const pedsPagos = peds.filter(p => p.st === 'pago' && p.data.startsWith(mes)).length;
 
-  // A receber: all non-cancelled, non-paid orders with balance
+  // ── Previsão de recebimentos por mês (próximos 7 meses) ──────────────────
+  const previsao = useMemo(() => {
+    const meses: { mes: string; label: string; valor: number; nPeds: Set<number> }[] = [];
+    for (let i = 0; i < 7; i++) {
+      meses.push({ mes: addMes(meAtual, i), label: fmtMesLong(addMes(meAtual, i)), valor: 0, nPeds: new Set() });
+    }
+    peds.forEach(p => {
+      if (p.st === 'cancelado' || p.st === 'pago') return;
+      if (p.parcelas && p.parcelas.length > 0) {
+        p.parcelas.forEach(parc => {
+          if (parc.pago) return;
+          const slot = meses.find(m => parc.data.startsWith(m.mes));
+          if (slot) { slot.valor += parc.valor; slot.nPeds.add(p.id); }
+        });
+      } else {
+        const rest = p.vTotal - p.sinal;
+        if (rest <= 0) return;
+        const refData = p.vencimento || p.prazo;
+        const slot = meses.find(m => refData.startsWith(m.mes));
+        if (slot) { slot.valor += rest; slot.nPeds.add(p.id); }
+      }
+    });
+    return meses;
+  }, [peds, meAtual]);
+
+  const maxPrev = Math.max(...previsao.map(m => m.valor), 1);
+  const totalPrev = previsao.reduce((s, m) => s + m.valor, 0);
+
+  // A receber geral
   const aReceberList = peds
     .filter(p => p.st !== 'cancelado' && p.st !== 'pago' && (p.vTotal - p.sinal) > 0)
     .sort((a, b) => {
-      const dataA = a.vencimento || a.prazo;
-      const dataB = b.vencimento || b.prazo;
-      return dataA.localeCompare(dataB);
+      const da = a.vencimento || (a.parcelas?.find(pc => !pc.pago)?.data) || a.prazo;
+      const db = b.vencimento || (b.parcelas?.find(pc => !pc.pago)?.data) || b.prazo;
+      return da.localeCompare(db);
     });
   const totalAReceber = aReceberList.reduce((s, p) => s + (p.vTotal - p.sinal), 0);
 
-  // Upcoming charges (next 14 days)
-  const hoje_ = hoje();
+  // Cobranças próximas (14 dias)
   type ProxItem = { ped: Pedido; data: string; valor: number; tipo: 'vencimento' | 'parcela'; parcelaIdx?: number };
   const proximas: ProxItem[] = [];
   peds.forEach(p => {
@@ -57,19 +90,16 @@ export function Caixa({ ctx }: Props) {
     if (rest <= 0) return;
     if (p.parcelas && p.parcelas.length > 0) {
       p.parcelas.forEach((parc, idx) => {
-        if (!parc.pago && parc.data >= hoje_) {
-          const d = diasAte(parc.data);
-          if (d <= 14) proximas.push({ ped: p, data: parc.data, valor: parc.valor, tipo: 'parcela', parcelaIdx: idx });
-        }
+        if (!parc.pago && parc.data >= hoje_ && diasAte(parc.data) <= 14)
+          proximas.push({ ped: p, data: parc.data, valor: parc.valor, tipo: 'parcela', parcelaIdx: idx });
       });
-    } else if (p.vencimento && p.vencimento >= hoje_) {
-      const d = diasAte(p.vencimento);
-      if (d <= 14) proximas.push({ ped: p, data: p.vencimento, valor: rest, tipo: 'vencimento' });
+    } else if (p.vencimento && p.vencimento >= hoje_ && diasAte(p.vencimento) <= 14) {
+      proximas.push({ ped: p, data: p.vencimento, valor: rest, tipo: 'vencimento' });
     }
   });
   proximas.sort((a, b) => a.data.localeCompare(b.data));
 
-  // Brand performance using actual order+product data
+  // Desempenho por marca
   const recPorMarca = MARCAS.map(m => {
     const total = mesPeds.reduce((sum, p) =>
       sum + (p.itens ?? []).reduce((s, it) => {
@@ -80,7 +110,7 @@ export function Caixa({ ctx }: Props) {
   }).filter(m => m.total > 0).sort((a, b) => b.total - a.total);
   const totalMarca = recPorMarca.reduce((a, b) => a + b.total, 0);
 
-  // Best-selling product this month
+  // Produto destaque
   const prodVendas: Record<string, { nome: string; icon: string; total: number; qtd: number }> = {};
   mesPeds.forEach(p => {
     (p.itens ?? []).forEach(it => {
@@ -102,17 +132,13 @@ export function Caixa({ ctx }: Props) {
       <div className="cx-month-nav">
         <button className="cx-month-btn" onClick={() => setMes(m => addMes(m, -1))}>‹</button>
         <span className="cx-month-label">{fmtMesLabel(mes)}</span>
-        <button
-          className="cx-month-btn"
-          onClick={() => setMes(m => addMes(m, 1))}
-          disabled={addMes(mes, 1) > meAtual}
-        >›</button>
+        <button className="cx-month-btn" onClick={() => setMes(m => addMes(m, 1))}>›</button>
         {mes !== meAtual && (
           <button className="cx-month-hoje" onClick={() => setMes(meAtual)}>Mês atual</button>
         )}
       </div>
 
-      {/* Hero */}
+      {/* Hero saldo */}
       <div className="caixa-hero">
         <div className="caixa-hero-l">
           <div className="card-eyebrow">Saldo do mês</div>
@@ -154,6 +180,50 @@ export function Caixa({ ctx }: Props) {
         </div>
       </div>
 
+      {/* ── PREVISÃO DE RECEBIMENTOS POR MÊS ── */}
+      {totalPrev > 0 && (
+        <div className="card-soft cx-prev-card">
+          <div className="card-head" style={{ marginBottom: 16 }}>
+            <div>
+              <div className="card-eyebrow">Planejamento financeiro</div>
+              <h3 className="card-title">
+                Previsão de recebimentos
+                <span className="cx-badge-val">{fmtR$(totalPrev)}</span>
+              </h3>
+            </div>
+          </div>
+          <p className="cx-prev-sub">
+            O que você tem a receber mês a mês, contando parcelas e vencimentos dos pedidos em aberto.
+          </p>
+          <div className="cx-prev-scroll">
+            {previsao.map((slot, i) => {
+              const pct = maxPrev > 0 ? (slot.valor / maxPrev) * 100 : 0;
+              const isCurrent = slot.mes === meAtual;
+              const isPast = slot.mes < meAtual;
+              return (
+                <div key={slot.mes} className={`cx-prev-col${isCurrent ? ' current' : ''}${isPast ? ' past' : ''}`}>
+                  <div className="cx-prev-val">
+                    {slot.valor > 0 ? fmtR$(slot.valor) : '—'}
+                  </div>
+                  <div className="cx-prev-bar-wrap">
+                    <motion.div
+                      className="cx-prev-bar-fill"
+                      initial={{ height: 0 }}
+                      animate={{ height: pct + '%' }}
+                      transition={{ duration: 0.5, delay: i * 0.06, ease: [0.4, 0, 0.2, 1] }}
+                    />
+                  </div>
+                  <div className="cx-prev-mes">{slot.label.slice(0, 3)}</div>
+                  {slot.nPeds.size > 0 && (
+                    <div className="cx-prev-n">{slot.nPeds.size} ped.</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {topProd && (
         <div className="cx-top-prod">
           <span className="cx-top-prod-icon">{topProd.icon}</span>
@@ -168,7 +238,7 @@ export function Caixa({ ctx }: Props) {
         </div>
       )}
 
-      {/* A receber */}
+      {/* A receber lista */}
       {aReceberList.length > 0 && (
         <div className="card-soft">
           <div className="card-head">
@@ -212,7 +282,7 @@ export function Caixa({ ctx }: Props) {
         </div>
       )}
 
-      {/* Upcoming charges */}
+      {/* Cobranças próximas */}
       {proximas.length > 0 && (
         <div className="card-soft">
           <div className="card-head">
@@ -248,7 +318,7 @@ export function Caixa({ ctx }: Props) {
         </div>
       )}
 
-      {/* Brand performance */}
+      {/* Desempenho por marca */}
       {recPorMarca.length > 0 && (
         <div className="card-soft">
           <div className="card-head">
@@ -310,6 +380,7 @@ export function Caixa({ ctx }: Props) {
           </div>
         )}
       </div>
+
     </div>
   );
 }
