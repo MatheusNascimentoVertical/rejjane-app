@@ -31,6 +31,9 @@ export function Catalogo({ ctx }: Props) {
   const updEstoque = (id: string, delta: number) =>
     setProds(ps => ps.map(p => p.id === id ? { ...p, estoque: Math.max(0, (p.estoque ?? 0) + delta) } : p));
 
+  const toggleAtivo = (id: string) =>
+    setProds(ps => ps.map(p => p.id === id ? { ...p, ativo: !p.ativo } : p));
+
   const ativos = prods.filter(p => p.ativo).length;
 
   return (
@@ -137,6 +140,14 @@ export function Catalogo({ ctx }: Props) {
                   <span className={`cat-est-num${est === 0 ? ' zero' : ''}`} title="Unidades em mãos">{est}</span>
                   <button className="cat-est-btn" onClick={() => updEstoque(p.id, 1)}>+</button>
                 </div>
+
+                <button
+                  className={`cat-row-toggle${p.ativo ? ' on' : ''}`}
+                  onClick={() => toggleAtivo(p.id)}
+                  title={p.ativo ? 'Desativar produto' : 'Ativar produto'}
+                >
+                  {p.ativo ? 'Ativo' : 'Inativo'}
+                </button>
 
                 <button
                   className="btn-soft-sm cat-row-edit"

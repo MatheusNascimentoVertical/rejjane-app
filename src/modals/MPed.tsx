@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
-import { PRODS, ST, getProd } from '../data/constants';
+import { PRODS, ST } from '../data/constants';
 import type { Prod } from '../data/constants';
 import { hoje, dPlus, fmtR$ } from '../lib/helpers';
 import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Cliente } from '../types';
@@ -161,7 +161,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
     setF(s => ({ ...s, itens: s.itens.filter((_, idx) => idx !== i) }));
 
   const setProdItem = (i: number, prodId: string) => {
-    const p = getProd(prodId);
+    const p = prodList.find(x => x.id === prodId);
     updItem(i, { prodId, vUnit: p?.preco ?? 0 });
   };
 
@@ -191,7 +191,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
       <div className="ped-itens-label"><span className="field-label">Produtos do pedido</span></div>
       <div className="ped-itens">
         {f.itens.map((item, i) => {
-          const prodAtual = getProd(item.prodId);
+          const prodAtual = prodList.find(x => x.id === item.prodId);
           return (
             <div key={i} className="ped-item-card">
               <button className="ped-item-del-abs" onClick={() => removeItem(i)} title="Remover produto">✕</button>

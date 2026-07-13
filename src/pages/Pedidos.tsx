@@ -14,20 +14,109 @@ const PAG_LABEL: Record<Pagamento, string> = {
   dinheiro: 'Dinheiro',
 };
 
+const PAG_ICON: Record<Pagamento, string> = {
+  pix:      '⚡',
+  credito:  '💳',
+  dinheiro: '💵',
+};
+
+type SortKey = 'prazo' | 'recente' | 'valor-desc' | 'valor-asc';
+
+const QUICK_FILTERS = [
+  { key: 'todos',     label: 'Todos' },
+  { key: 'atrasados', label: '🔴 Atrasados' },
+  { key: 'hoje',      label: '📅 Hoje' },
+  { key: 'cobrar',    label: '💰 A cobrar' },
+];
+
 export function Pedidos({ ctx }: Props) {
   const { peds, fSt, setFSt, search, setModal, avancar } = ctx;
   const tabsRef = useRef<HTMLDivElement>(null);
+  const [sort, setSort]           = useState<SortKey>('prazo');
+  const [pagFilt, setPagFilt]     = useState<string>('todos');
+  const [quickFilt, setQuickFilt] = useState<string>('todos');
 
-  const filt = peds
+  const hoje_ = hoje();
+
+  const emAberto    = peds.filter(p => p.st !== 'entregue' && p.st !== 'pago' && p.st !== 'cancelado');
+  const atrasados   = emAberto.filter(p => p.prazo < hoje_);
+  const venceHoje   = emAberto.filter(p => p.prazo === hoje_);
+  const aReceberTot = emAberto.reduce((s, p) => s + Math.max(0, p.vTotal - p.sinal), 0);
+
+  const sorted = [...peds].sort((a, b) => {
+    if (sort === 'prazo')      return a.prazo.localeCompare(b.prazo);
+    if (sort === 'recente')    return b.data.localeCompare(a.data);
+    if (sort === 'valor-desc') return b.vTotal - a.vTotal;
+    if (sort === 'valor-asc')  return a.vTotal - b.vTotal;
+    return 0;
+  });
+
+  const filt = sorted
     .filter(p => fSt === 'todos' || p.st === fSt)
-    .filter(p => !search || p.cliNome.toLowerCase().includes(search.toLowerCase()) || String(p.id).includes(search))
-    .sort((a, b) => a.prazo.localeCompare(b.prazo));
+    .filter(p => pagFilt === 'todos' || p.pagamento === pagFilt)
+    .filter(p => {
+      if (quickFilt === 'atrasados') return p.prazo < hoje_ && p.st !== 'entregue' && p.st !== 'pago' && p.st !== 'cancelado';
+      if (quickFilt === 'hoje')      return p.prazo === hoje_ && p.st !== 'cancelado';
+      if (quickFilt === 'cobrar')    return (p.vTotal - p.sinal) > 0 && p.st !== 'cancelado' && p.st !== 'pago';
+      return true;
+    })
+    .filter(p => !search || p.cliNome.toLowerCase().includes(search.toLowerCase()) || String(p.id).includes(search));
 
   return (
     <div className="pedidos">
+      {/* Summary bar */}
+      <div className="peds-summary">
+        <div className="peds-stat">
+          <span className="peds-stat-num">{emAberto.length}</span>
+          <span className="peds-stat-label">em aberto</span>
+        </div>
+        <div className="peds-stat-div" />
+        <div className="peds-stat">
+          <span className="peds-stat-num" style={{ color: 'var(--rose-d)' }}>{fmtR$(aReceberTot)}</span>
+          <span className="peds-stat-label">a receber</span>
+        </div>
+        <div className="peds-stat-div" />
+        <div className="peds-stat">
+          <span className={`peds-stat-num${atrasados.length > 0 ? ' red' : ''}`}>{atrasados.length}</span>
+          <span className="peds-stat-label">atrasados</span>
+        </div>
+        <div className="peds-stat-div" />
+        <div className="peds-stat">
+          <span className={`peds-stat-num${venceHoje.length > 0 ? ' peds-warn' : ''}`}>{venceHoje.length}</span>
+          <span className="peds-stat-label">vence hoje</span>
+        </div>
+      </div>
+
+      {/* Quick filters + sort */}
+      <div className="peds-quick-row">
+        {QUICK_FILTERS.map(({ key, label }) => (
+          <button
+            key={key}
+            className={`peds-qpill${quickFilt === key ? ' active' : ''}`}
+            onClick={() => setQuickFilt(key)}
+          >
+            {label}
+          </button>
+        ))}
+        <div className="peds-sort-wrap">
+          <select className="peds-sort" value={sort} onChange={e => setSort(e.target.value as SortKey)}>
+            <option value="prazo">↑ Prazo</option>
+            <option value="recente">↓ Recente</option>
+            <option value="valor-desc">↓ Valor</option>
+            <option value="valor-asc">↑ Valor</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Status tabs */}
       <div className="filter-tabs" ref={tabsRef}>
         <SlidingIndicator activeKey={fSt} containerRef={tabsRef} />
-        <motion.button className={`ftab${fSt === 'todos' ? ' active' : ''}`} data-key="todos" onClick={() => setFSt('todos')} whileTap={{ scale: 0.96 }}>
+        <motion.button
+          className={`ftab${fSt === 'todos' ? ' active' : ''}`}
+          data-key="todos"
+          onClick={() => setFSt('todos')}
+          whileTap={{ scale: 0.96 }}
+        >
           Todos <span className="ftab-count">{peds.length}</span>
         </motion.button>
         {Object.entries(ST).map(([k, v]) => {
@@ -45,6 +134,20 @@ export function Pedidos({ ctx }: Props) {
             </motion.button>
           );
         })}
+      </div>
+
+      {/* Payment filter + result count */}
+      <div className="peds-pag-row">
+        {(['todos', 'pix', 'credito', 'dinheiro'] as const).map(k => (
+          <button
+            key={k}
+            className={`peds-pag-pill${pagFilt === k ? ' active' : ''}`}
+            onClick={() => setPagFilt(k)}
+          >
+            {k === 'todos' ? 'Todos' : `${PAG_ICON[k]} ${PAG_LABEL[k]}`}
+          </button>
+        ))}
+        <span className="peds-result-count">{filt.length} pedido{filt.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="pedidos-list">
