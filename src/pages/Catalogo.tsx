@@ -142,36 +142,38 @@ export function Catalogo({ ctx }: Props) {
 
                 <div className="cat-row-preco">{fmtR$(p.preco)}</div>
 
-                <div className="cat-row-est">
-                  <button className="cat-est-btn" onClick={() => updEstoque(p.id, -1)}>−</button>
-                  <span className={`cat-est-num${est === 0 ? ' zero' : ''}`} title="Unidades em mãos">{est}</span>
-                  <button className="cat-est-btn" onClick={() => updEstoque(p.id, 1)}>+</button>
+                <div className="cat-row-actions">
+                  <div className="cat-row-est">
+                    <button className="cat-est-btn" onClick={() => updEstoque(p.id, -1)}>−</button>
+                    <span className={`cat-est-num${est === 0 ? ' zero' : ''}`} title="Unidades em mãos">{est}</span>
+                    <button className="cat-est-btn" onClick={() => updEstoque(p.id, 1)}>+</button>
+                  </div>
+
+                  <button
+                    className={`cat-row-toggle${p.ativo ? ' on' : ''}`}
+                    onClick={() => toggleAtivo(p.id)}
+                    title={p.ativo ? 'Desativar produto' : 'Ativar produto'}
+                  >
+                    {p.ativo ? 'Ativo' : 'Inativo'}
+                  </button>
+
+                  <button
+                    className="btn-soft-sm cat-row-edit"
+                    onClick={() => setModal({ tipo: 'prod', dados: p })}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="cat-row-del"
+                    onClick={() => excluir(p.id, p.nome, sold)}
+                    title="Excluir produto do catálogo"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
                 </div>
-
-                <button
-                  className={`cat-row-toggle${p.ativo ? ' on' : ''}`}
-                  onClick={() => toggleAtivo(p.id)}
-                  title={p.ativo ? 'Desativar produto' : 'Ativar produto'}
-                >
-                  {p.ativo ? 'Ativo' : 'Inativo'}
-                </button>
-
-                <button
-                  className="btn-soft-sm cat-row-edit"
-                  onClick={() => setModal({ tipo: 'prod', dados: p })}
-                >
-                  Editar
-                </button>
-
-                <button
-                  className="cat-row-del"
-                  onClick={() => excluir(p.id, p.nome, sold)}
-                  title="Excluir produto do catálogo"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                  </svg>
-                </button>
               </motion.div>
             );
           })}
