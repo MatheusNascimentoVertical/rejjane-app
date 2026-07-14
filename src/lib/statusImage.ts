@@ -77,7 +77,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   const IS = 720, IPAD = (W - IS) / 2, IY = 360;
 
   c.save();
-  c.shadowColor = 'rgba(173,20,87,0.16)'; c.shadowBlur = 60; c.shadowOffsetY = 22;
+  c.shadowColor = 'rgba(173,20,87,0.18)'; c.shadowBlur = 30; c.shadowOffsetY = 10;
   c.fillStyle = '#fff'; rr(c, IPAD, IY, IS, IS, 48); c.fill(); c.restore();
 
   if (prod.fotoUrl) {
