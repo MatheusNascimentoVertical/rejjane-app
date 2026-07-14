@@ -29,6 +29,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState(dados?.fotoUrl ?? '');
   const [saving,   setSaving]   = useState(false);
+  const [uploadando, setUploadando] = useState(false);
   const [erro,     setErro]     = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -43,7 +44,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   };
 
   const salvar = async () => {
-    if (!nome.trim()) return;
+    if (!nome.trim()) { setErro('Informe o nome do produto.'); return; }
     setSaving(true);
     setErro('');
     try {
@@ -51,10 +52,23 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
       let finalFotoUrl = fotoUrl;
 
       if (fotoFile) {
+        setUploadando(true);
         try {
           finalFotoUrl = await uploadFoto(fotoFile);
-        } catch {
-          setErro('Foto não enviada. Verifique sua conexão ou tente sem foto.');
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes('VITE_CLOUDINARY')) {
+            setErro('Configuração de imagem ausente. Salve sem foto por enquanto e contate o suporte.');
+          } else if (msg.includes('400') || msg.includes('401')) {
+            setErro('Preset de upload inválido no Cloudinary. Verifique as configurações.');
+          } else {
+            setErro(`Foto não enviada: ${msg}. Verifique sua conexão ou salve sem foto.`);
+          }
+          setSaving(false);
+          setUploadando(false);
+          return; // mantém o modal aberto para a usuária ver o erro
+        } finally {
+          setUploadando(false);
         }
       }
 
@@ -79,11 +93,11 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
         setProds(ps => [prod, ...ps]);
       }
       onClose();
-    } catch {
-      setErro('Erro ao salvar. Tente novamente.');
-      setSaving(false);
+    } catch (e) {
+      setErro(`Erro ao salvar: ${e instanceof Error ? e.message : 'tente novamente.'}`);
     } finally {
       setSaving(false);
+      setUploadando(false);
     }
   };
 
@@ -96,9 +110,8 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
   return (
     <Sheet title={isEdit ? 'Editar produto' : 'Novo produto'} subtitle="Catálogo" onClose={onClose} wide>
       <div
-        className="foto-upload"
-        onClick={() => fileRef.current?.click()}
-        style={{ backgroundImage: fotoPreview ? `url(${fotoPreview})` : undefined }}
+        className={`foto-upload${uploadando ? ' foto-upload-loading' : ''}`}
+        onClick={() => !uploadando && fileRef.current?.click()}
       >
         {fotoPreview
           ? <img src={fotoPreview} alt="foto" className="foto-preview" />
@@ -109,6 +122,12 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
             </div>
           )
         }
+        {uploadando && (
+          <div className="foto-upload-overlay">
+            <div className="foto-upload-spinner" />
+            <span>Enviando foto…</span>
+          </div>
+        )}
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFoto} />
       </div>
 
@@ -191,8 +210,8 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
           </>
         )}
         <button className="btn-soft" onClick={onClose}>Cancelar</button>
-        <button className="btn-primary" onClick={salvar} disabled={saving}>
-          {saving ? 'Salvando…' : 'Salvar produto'}
+        <button className="btn-primary" onClick={salvar} disabled={saving || uploadando}>
+          {uploadando ? 'Enviando foto…' : saving ? 'Salvando…' : 'Salvar produto'}
         </button>
       </div>
     </Sheet>

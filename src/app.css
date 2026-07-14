@@ -885,6 +885,10 @@ body {
 /* ─── Foto upload ─── */
 .foto-upload { width: 100%; aspect-ratio: 16/7; border: 2px dashed var(--line-2); border-radius: 16px; overflow: hidden; cursor: pointer; margin-bottom: 16px; position: relative; background: var(--cream-2); transition: border-color 0.16s; display: flex; align-items: center; justify-content: center; }
 .foto-upload:hover { border-color: var(--rose); }
+.foto-upload-loading { cursor: default; opacity: 0.8; }
+.foto-upload-overlay { position: absolute; inset: 0; background: rgba(255,245,248,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--rose-d); }
+.foto-upload-spinner { width: 28px; height: 28px; border: 3px solid var(--rose-pale); border-top-color: var(--rose); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .foto-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
 .foto-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--ink-mute); font-size: 13px; font-weight: 700; }
 
