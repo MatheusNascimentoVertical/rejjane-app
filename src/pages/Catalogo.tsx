@@ -18,7 +18,17 @@ export function Catalogo({ ctx }: Props) {
 
   useEffect(() => { setPage(1); }, [marcaAtiva, catAtiva, busca]);
 
-  const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
+  const norm = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  // Deduplica categorias por valor normalizado (evita 'Perfume' e 'perfume' como duas pills)
+  const catsSeen = new Set<string>();
+  const cats = ['Todos', ...prods.map(p => p.cat).filter(c => {
+    const n = norm(c);
+    if (catsSeen.has(n)) return false;
+    catsSeen.add(n);
+    return true;
+  })];
 
   function vendidos(id: string) {
     return peds.reduce((sum, p) => {
@@ -28,9 +38,9 @@ export function Catalogo({ ctx }: Props) {
   }
 
   const filtered = prods
-    .filter(p => marcaAtiva === 'Todos' || p.marca === marcaAtiva)
-    .filter(p => catAtiva === 'Todos' || p.cat === catAtiva)
-    .filter(p => !busca.trim() || p.nome.toLowerCase().includes(busca.toLowerCase()) || p.marca.toLowerCase().includes(busca.toLowerCase()))
+    .filter(p => marcaAtiva === 'Todos' || norm(p.marca) === norm(marcaAtiva))
+    .filter(p => catAtiva === 'Todos' || norm(p.cat) === norm(catAtiva))
+    .filter(p => !busca.trim() || norm(p.nome).includes(norm(busca)) || norm(p.marca).includes(norm(busca)))
     .slice()
     .sort((a, b) => vendidos(b.id) - vendidos(a.id));
 
