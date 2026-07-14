@@ -32,41 +32,75 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
 
   // ── ZONA A: LOGO ──────────────────────────────────────────────────────────
   const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
+  const LOGO_R = 76; // raio do círculo da logo
+  const LOGO_CX = W / 2, LOGO_CY = LOGO_R + 18;
 
-  // Losango decorativo
-  c.save();
-  c.translate(W / 2, 54);
-  c.rotate(Math.PI / 4);
-  c.fillStyle = '#e91e63';
-  c.fillRect(-9, -9, 18, 18);
-  c.restore();
+  // Tenta carregar a logo real (rejjane-logo.jpeg no public)
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    await new Promise<void>((res, rej) => {
+      logoImg.onload = () => res();
+      logoImg.onerror = () => rej();
+      logoImg.src = '/rejjane-logo.jpeg';
+    });
+    // Anel rose em volta
+    c.save();
+    c.beginPath();
+    c.arc(LOGO_CX, LOGO_CY, LOGO_R + 5, 0, Math.PI * 2);
+    c.fillStyle = '#e91e63';
+    c.fill();
+    c.restore();
+    // Clip circular e desenha logo
+    c.save();
+    c.beginPath();
+    c.arc(LOGO_CX, LOGO_CY, LOGO_R, 0, Math.PI * 2);
+    c.clip();
+    const s = (LOGO_R * 2) / Math.min(logoImg.width, logoImg.height);
+    const lw = logoImg.width * s, lh = logoImg.height * s;
+    c.drawImage(logoImg, LOGO_CX - lw / 2, LOGO_CY - lh / 2, lw, lh);
+    c.restore();
+  } catch {
+    // Fallback: losango decorativo
+    c.save();
+    c.translate(LOGO_CX, LOGO_CY);
+    c.rotate(Math.PI / 4);
+    c.fillStyle = '#e91e63';
+    c.fillRect(-12, -12, 24, 24);
+    c.restore();
+  }
 
   // Nome da loja — serif itálico elegante
-  c.font = 'italic bold 78px Georgia, serif';
+  c.font = 'italic bold 68px Georgia, serif';
   c.fillStyle = '#3d1020';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(storeName, W / 2, 120);
+  c.fillText(storeName, W / 2, LOGO_CY + LOGO_R + 52);
 
   // Slogan
+  const NAME_BOTTOM = LOGO_CY + LOGO_R + 52;
   if (cfg.slogan) {
-    c.font = '500 34px Nunito, sans-serif';
+    c.font = '500 32px Nunito, sans-serif';
     c.fillStyle = '#b07a8e';
     c.textBaseline = 'top';
-    c.fillText(cfg.slogan, W / 2, 164);
+    c.fillText(cfg.slogan, W / 2, NAME_BOTTOM + 22);
   }
 
-  // Linha gradiente sob o nome
+  // Linha gradiente
+  const lineY = NAME_BOTTOM + (cfg.slogan ? 68 : 28);
   const lg = c.createLinearGradient(W / 2 - 180, 0, W / 2 + 180, 0);
   lg.addColorStop(0, 'transparent');
   lg.addColorStop(0.3, '#e91e63');
   lg.addColorStop(0.7, '#e91e63');
   lg.addColorStop(1, 'transparent');
   c.fillStyle = lg;
-  c.fillRect(W / 2 - 180, cfg.slogan ? 204 : 162, 360, 2);
+  c.fillRect(W / 2 - 180, lineY, 360, 2);
 
   // ── ZONA B: FOTO ──────────────────────────────────────────────────────────
-  const PAD = 56, IMG_Y = 216, IMG_W = W - PAD * 2, IMG_H = 960;
+  // Zona A ocupa: logo (LOGO_CY+LOGO_R=170) + nome(52) + slogan(opt 68) + linha(2) + gap(16)
+  const IMG_Y = cfg.slogan ? 330 : 270;
+  const PAD = 56, IMG_W = W - PAD * 2;
+  const IMG_H = 1160 - IMG_Y; // sempre termina em y=1160
 
   // Sombra do card
   c.save();
