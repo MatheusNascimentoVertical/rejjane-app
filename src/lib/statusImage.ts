@@ -26,24 +26,24 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   bgG.addColorStop(1, 'rgba(249,213,227,0.6)');
   c.fillStyle = bgG; c.fillRect(0, 0, W, H);
 
-  // ── FAIXA ROSE (y=0–340) ──────────────────────────────────────────────────
-  const bandG = c.createLinearGradient(0, 0, 0, 340);
+  // ── FAIXA ROSE (y=0–362) ──────────────────────────────────────────────────
+  const bandG = c.createLinearGradient(0, 0, 0, 362);
   bandG.addColorStop(0, '#ad1457');
   bandG.addColorStop(1, '#e91e63');
-  c.fillStyle = bandG; c.fillRect(0, 0, W, 340);
+  c.fillStyle = bandG; c.fillRect(0, 0, W, 362);
 
   // Reflexos decorativos dentro da faixa
   c.save(); c.globalAlpha = 0.13; c.fillStyle = '#fff';
   c.beginPath(); c.arc(W * 0.86, -20, 260, 0, Math.PI * 2); c.fill(); c.restore();
   c.save(); c.globalAlpha = 0.06; c.fillStyle = '#fff';
-  c.beginPath(); c.arc(W * 0.1, 320, 190, 0, Math.PI * 2); c.fill(); c.restore();
+  c.beginPath(); c.arc(W * 0.1, 340, 190, 0, Math.PI * 2); c.fill(); c.restore();
 
   // Arco branco na base da faixa
   c.save(); c.fillStyle = '#fff8f9';
-  c.beginPath(); c.ellipse(cx, 360, W / 2 + 90, 76, 0, 0, Math.PI); c.fill(); c.restore();
+  c.beginPath(); c.ellipse(cx, 384, W / 2 + 90, 80, 0, 0, Math.PI); c.fill(); c.restore();
 
   // ── LOGO + NOME DA LOJA ────────────────────────────────────────────────────
-  const LCY = 205, LR = 50;
+  const LCY = 210, LR = 50;
   c.save(); c.beginPath(); c.arc(cx, LCY, LR + 6, 0, Math.PI * 2);
   c.fillStyle = 'rgba(255,255,255,0.88)'; c.fill(); c.restore();
 
@@ -62,19 +62,19 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
   c.font = 'italic bold 56px Georgia, serif';
   c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(storeName, cx, 275);
+  c.fillText(storeName, cx, 286);
 
   if (cfg.slogan) {
     c.font = '500 23px Nunito, sans-serif';
     c.fillStyle = 'rgba(255,255,255,0.82)'; c.textBaseline = 'middle';
-    c.fillText(cfg.slogan, cx, 312);
+    c.fillText(cfg.slogan, cx, 330);
   }
 
-  // ── FOTO (y=378–1098, 720×720) ───────────────────────────────────────────
-  const IS = 720, IPAD = (W - IS) / 2, IY = 378;
+  // ── FOTO (y=406–1126, 720×720) ───────────────────────────────────────────
+  const IS = 720, IPAD = (W - IS) / 2, IY = 406;
 
   c.save();
-  c.shadowColor = 'rgba(173,20,87,0.18)'; c.shadowBlur = 22; c.shadowOffsetY = 8;
+  c.shadowColor = 'rgba(173,20,87,0.18)'; c.shadowBlur = 24; c.shadowOffsetY = 10;
   c.fillStyle = '#fff'; rr(c, IPAD, IY, IS, IS, 48); c.fill(); c.restore();
 
   if (prod.fotoUrl) {
@@ -105,7 +105,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   }
 
   // ── INFO DO PRODUTO ────────────────────────────────────────────────────────
-  const infoY = IY + IS + 18;
+  const infoY = IY + IS + 26;
 
   // ① Marca · Categoria — pills separadas
   c.font = '700 23px Nunito, sans-serif';
@@ -115,7 +115,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   const ctW = c.measureText(catTxt).width + 40;
   const pillH = 44, pillGap = 14;
   const pillsStartX = cx - (mW + ctW + pillGap) / 2;
-  const pillY = infoY + 20;
+  const pillY = infoY + 34;
 
   c.save(); c.fillStyle = '#fce8f0'; rr(c, pillsStartX, pillY, mW, pillH, pillH / 2); c.fill();
   c.fillStyle = '#c2185b'; c.textAlign = 'left'; c.textBaseline = 'middle';
@@ -126,7 +126,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   c.fillText(catTxt, pillsStartX + mW + pillGap + 20, pillY + pillH / 2); c.restore();
 
   // Divisor rose
-  const divY = pillY + pillH + 24;
+  const divY = pillY + pillH + 34;
   const dg = c.createLinearGradient(cx - 160, 0, cx + 160, 0);
   dg.addColorStop(0, 'transparent'); dg.addColorStop(0.3, '#e91e63'); dg.addColorStop(0.7, '#e91e63'); dg.addColorStop(1, 'transparent');
   c.fillStyle = dg; c.fillRect(cx - 160, divY, 320, 2.5);
@@ -135,12 +135,12 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   c.font = 'bold 68px Nunito, sans-serif'; c.fillStyle = '#3d1020';
   c.textAlign = 'center'; c.textBaseline = 'alphabetic';
   const nameLines = clampLines(c, prod.nome, W - 100, 2);
-  const nameStartY = divY + 72;
+  const nameStartY = divY + 86;
   nameLines.forEach((line, i) => c.fillText(line, cx, nameStartY + i * 82));
   const nameEndY = nameStartY + (nameLines.length - 1) * 82;
 
   // ③ Bloco de preço — âncora de desconto + preço destaque
-  const priceTopY = Math.max(nameEndY + 54, infoY + 238);
+  const priceTopY = Math.max(nameEndY + 66, infoY + 262);
   const hasDiscount = Boolean(prod.precoDe && prod.precoDe > prod.preco);
 
   if (hasDiscount) {
@@ -161,7 +161,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
     const ecoTxt = `💰 Você economiza ${pct}%`;
     c.font = 'bold 28px Nunito, sans-serif';
     const ew = c.measureText(ecoTxt).width + 56;
-    const eX = cx - ew / 2, eY = priceTopY + 124;
+    const eX = cx - ew / 2, eY = priceTopY + 134;
     c.save();
     c.shadowColor = 'rgba(183,28,28,0.18)'; c.shadowBlur = 14; c.shadowOffsetY = 4;
     c.fillStyle = '#fde8ee'; rr(c, eX, eY, ew, 52, 26); c.fill(); c.restore();
@@ -177,7 +177,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   }
 
   // ── BOTÃO PEDIR AGORA ────────────────────────────────────────────────────
-  const btnTopY = hasDiscount ? priceTopY + 198 : priceTopY + 140;
+  const btnTopY = hasDiscount ? priceTopY + 214 : priceTopY + 154;
   const BTN_H = 92, BTN_W = 700, BTN_X = (W - BTN_W) / 2;
 
   c.save();
@@ -195,14 +195,14 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   // Texto de reforço abaixo do botão
   c.font = '500 24px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
   c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('✓ Resposta rápida  ✓ Entrega garantida', cx, btnTopY + BTN_H + 34);
+  c.fillText('✓ Resposta rápida  ✓ Entrega garantida', cx, btnTopY + BTN_H + 46);
 
   // ── RODAPÉ ────────────────────────────────────────────────────────────────
   const footerParts: string[] = [];
   if (cfg.telefone) footerParts.push(`📱 ${cfg.telefone}`);
   if (cfg.instagram) footerParts.push(`📸 ${cfg.instagram}`);
   if (footerParts.length) {
-    const footerY = btnTopY + BTN_H + 72;
+    const footerY = btnTopY + BTN_H + 92;
     // Linha tênue antes do rodapé
     c.save(); c.globalAlpha = 0.18; c.fillStyle = '#e91e63';
     c.fillRect(cx - 120, footerY - 18, 240, 1.5); c.restore();
