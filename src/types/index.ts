@@ -17,6 +17,7 @@ export type Produto = {
   fotoUrl?: string;
   ativo: boolean;
   destaque?: boolean;
+  ultimoStatus?: number;
 };
 
 export type Cliente = {

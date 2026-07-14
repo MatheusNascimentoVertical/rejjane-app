@@ -83,19 +83,21 @@ export const NAV: [string, string][] = [
   ['pedidos',    'Pedidos'],
   ['clientes',   'Clientes'],
   ['catalogo',   'Catálogo'],
+  ['postagens',  'Postagens'],
   ['caixa',      'Caixa'],
   ['analiticos', 'Análise'],
   ['config',     'Ajustes'],
 ];
 
-// Bottom nav — all 7 tabs, scrollable on mobile
+// Bottom nav — scrollable on mobile
 export const BOTTOM_NAV: [string, string][] = [
   ['dash',       'Início'],
   ['pedidos',    'Pedidos'],
   ['clientes',   'Clientes'],
+  ['catalogo',   'Catálogo'],
+  ['postagens',  'Postagens'],
   ['analiticos', 'Análise'],
   ['caixa',      'Caixa'],
-  ['catalogo',   'Catálogo'],
   ['config',     'Ajustes'],
 ];
 

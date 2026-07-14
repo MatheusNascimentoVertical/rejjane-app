@@ -1295,3 +1295,122 @@ body {
 /* ─── Login logo with Avatar3D ─── */
 .login-head .av3d-wrap { width: 180px; height: 180px; }
 .login-head .av3d-card { width: 110px; height: 110px; }
+
+/* ─── Postagens ─── */
+.postagens { padding: 0 0 40px; }
+
+.post-est-btn { display: flex; align-items: center; gap: 6px; }
+
+.post-summary {
+  display: flex; gap: 12px; margin: 20px 0 24px;
+}
+.post-chip {
+  flex: 1; background: #fff; border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 10px; text-align: center;
+  box-shadow: var(--shadow-1);
+}
+.post-chip-num {
+  display: block; font-size: 26px; font-weight: 700;
+  color: var(--rose); line-height: 1;
+}
+.post-chip-num-warn { color: #e65100; }
+.post-chip-num-ok   { color: #2e7d32; }
+.post-chip-lbl {
+  display: block; font-size: 11px; color: var(--ink-mute);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.post-section-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+  margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
+}
+.post-badge-pending {
+  background: #fce8f0; color: var(--rose); border-radius: 20px;
+  padding: 2px 8px; font-size: 11px; font-weight: 700;
+}
+
+.post-row {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 16px; padding: 12px 14px;
+  margin-bottom: 8px; box-shadow: var(--shadow-1);
+  border: 1px solid var(--line);
+}
+.post-row-thumb {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: var(--cream-2); flex-shrink: 0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.post-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.post-row-emoji { font-size: 22px; }
+
+.post-row-info { flex: 1; min-width: 0; }
+.post-row-nome {
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.post-row-sub { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.post-row-date {
+  font-size: 11px; color: var(--rose); font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+}
+.post-row-date.never { color: var(--ink-mute); font-weight: 500; }
+
+.post-row-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;
+}
+.post-row-price {
+  font-size: 13px; font-weight: 700; color: var(--rose);
+}
+.post-share-btn {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700;
+}
+
+.post-hint {
+  font-size: 13px; color: var(--ink-mute); margin: -8px 0 20px;
+}
+
+.post-bulk-list { display: flex; flex-direction: column; gap: 8px; }
+.post-bulk-row {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 14px; padding: 10px 14px;
+  box-shadow: var(--shadow-1); border: 1px solid var(--line);
+}
+.post-bulk-thumb {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: var(--cream-2); flex-shrink: 0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.post-bulk-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.post-bulk-nome {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.post-bulk-nome-txt {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.post-bulk-ctrl {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.post-bulk-input {
+  width: 52px; text-align: center; border: 1.5px solid var(--line);
+  border-radius: 8px; padding: 5px 4px; font-size: 15px; font-weight: 700;
+  color: var(--ink); background: var(--cream);
+  -moz-appearance: textfield;
+}
+.post-bulk-input::-webkit-inner-spin-button,
+.post-bulk-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.post-bulk-input:focus { outline: none; border-color: var(--rose); }
+
+@media (max-width: 540px) {
+  .post-summary { gap: 8px; }
+  .post-chip { padding: 12px 6px; }
+  .post-chip-num { font-size: 22px; }
+  .post-row { gap: 8px; padding: 10px 10px; }
+  .post-row-thumb { width: 44px; height: 44px; }
+}

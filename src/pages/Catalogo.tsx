@@ -76,8 +76,9 @@ export function Catalogo({ ctx }: Props) {
         a.click();
         URL.revokeObjectURL(url);
       }
+      setProds(ps => ps.map(x => x.id === p.id ? { ...x, ultimoStatus: Date.now() } : x));
     } catch {
-      // user cancelled or error — silently ignore
+      // user cancelled — silently ignore
     } finally {
       setCompartilhando(null);
     }

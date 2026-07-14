@@ -21,9 +21,10 @@ const Catalogo    = lazy(() => import('./pages/Catalogo').then(m => ({ default: 
 const Caixa       = lazy(() => import('./pages/Caixa').then(m => ({ default: m.Caixa })));
 const Config      = lazy(() => import('./pages/Config').then(m => ({ default: m.Config })));
 const Analiticos  = lazy(() => import('./pages/Analiticos').then(m => ({ default: m.Analiticos })));
+const Postagens   = lazy(() => import('./pages/Postagens').then(m => ({ default: m.Postagens })));
 import type { Cliente, Pedido, Lanc, Config as ConfigType, ModalState, AppCtx, PedidoForm, Produto } from './types';
 
-export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'analiticos' | 'config';
+export type Aba = 'dash' | 'pedidos' | 'clientes' | 'catalogo' | 'caixa' | 'analiticos' | 'config' | 'postagens';
 
 const DEMO = import.meta.env.VITE_DEMO === 'true';
 
@@ -265,6 +266,7 @@ export default function App() {
               {aba === 'catalogo'   && <Catalogo    ctx={ctx} />}
               {aba === 'caixa'      && <Caixa       ctx={ctx} />}
               {aba === 'analiticos' && <Analiticos  ctx={ctx} />}
+              {aba === 'postagens'  && <Postagens   ctx={ctx} />}
               {aba === 'config'     && <Config      ctx={ctx} />}
             </motion.div>
           </AnimatePresence>
