@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MARCAS } from '../data/constants';
 import { fmtR$ } from '../lib/helpers';
@@ -13,6 +13,10 @@ export function Catalogo({ ctx }: Props) {
   const [marcaAtiva, setMarcaAtiva] = useState('Todos');
   const [catAtiva, setCatAtiva] = useState('Todos');
   const [busca, setBusca] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
+
+  useEffect(() => { setPage(1); }, [marcaAtiva, catAtiva, busca]);
 
   const cats = ['Todos', ...Array.from(new Set(prods.map(p => p.cat)))];
 
@@ -44,6 +48,8 @@ export function Catalogo({ ctx }: Props) {
   };
 
   const ativos = prods.filter(p => p.ativo).length;
+  const visible = filtered.slice(0, page * PAGE_SIZE);
+  const hasMore = filtered.length > page * PAGE_SIZE;
 
   const postarStatus = async (p: Produto) => {
     setCompartilhando(p.id);
@@ -98,12 +104,17 @@ export function Catalogo({ ctx }: Props) {
       />
 
       <div className="cat-filter-row">
-        <button className={`cat-pill${marcaAtiva === 'Todos' ? ' active' : ''}`} onClick={() => setMarcaAtiva('Todos')}>Todas</button>
+        <button
+          className={`cat-pill${marcaAtiva === 'Todos' ? ' active' : ''}`}
+          onClick={() => { setMarcaAtiva('Todos'); setCatAtiva('Todos'); }}
+        >
+          Todas
+        </button>
         {MARCAS.map(m => (
           <button
             key={m.id}
             className={`cat-pill${marcaAtiva === m.id ? ' active' : ''}`}
-            onClick={() => setMarcaAtiva(m.id)}
+            onClick={() => { setMarcaAtiva(m.id); setCatAtiva('Todos'); }}
             style={marcaAtiva === m.id ? { background: m.bg, color: m.cor, borderColor: m.cor + '55' } : {}}
           >
             {m.icon} {m.nome}
@@ -123,6 +134,18 @@ export function Catalogo({ ctx }: Props) {
         ))}
       </div>
 
+      {(marcaAtiva !== 'Todos' || catAtiva !== 'Todos' || busca) && (
+        <div className="cat-result-count">
+          {filtered.length === 0
+            ? 'Nenhum produto encontrado'
+            : `${filtered.length} produto${filtered.length > 1 ? 's' : ''} encontrado${filtered.length > 1 ? 's' : ''}`
+          }
+          <button className="cat-clear-btn" onClick={() => { setMarcaAtiva('Todos'); setCatAtiva('Todos'); setBusca(''); }}>
+            Limpar filtros ×
+          </button>
+        </div>
+      )}
+
       <div className="cat-list">
         {filtered.length === 0 && (
           <div className="empty-state">
@@ -131,7 +154,7 @@ export function Catalogo({ ctx }: Props) {
           </div>
         )}
         <AnimatePresence mode="popLayout">
-          {filtered.map((p, i) => {
+          {visible.map((p, i) => {
             const sold = vendidos(p.id);
             const est = p.estoque ?? 0;
             return (
@@ -215,6 +238,12 @@ export function Catalogo({ ctx }: Props) {
           })}
         </AnimatePresence>
       </div>
+
+      {hasMore && (
+        <button className="cat-load-more" onClick={() => setPage(p => p + 1)}>
+          Ver mais {filtered.length - page * PAGE_SIZE} produto{filtered.length - page * PAGE_SIZE > 1 ? 's' : ''}
+        </button>
+      )}
     </div>
   );
 }

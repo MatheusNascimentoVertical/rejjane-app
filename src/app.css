@@ -383,15 +383,33 @@ body {
 .cat-search { width: 100%; box-sizing: border-box; border: 1.5px solid var(--line); border-radius: 12px; background: var(--cream-2); padding: 10px 14px; font-family: inherit; font-size: 14px; color: var(--ink); outline: none; }
 .cat-search:focus { border-color: var(--rose-l); background: #fff; }
 
-.cat-filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-filter-row {
+  display: flex; gap: 8px;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.cat-filter-row::-webkit-scrollbar { display: none; }
 .cat-pill {
-  padding: 6px 14px; border-radius: 20px;
+  flex-shrink: 0;
+  padding: 7px 16px; border-radius: 20px; min-height: 36px;
   background: #fff; border: 1.5px solid var(--line);
   font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink-soft);
   cursor: pointer; transition: all 0.16s; display: inline-flex; align-items: center; gap: 5px;
+  white-space: nowrap;
 }
 .cat-pill:hover { border-color: var(--rose); color: var(--rose-d); }
 .cat-pill.active { background: linear-gradient(135deg, var(--rose), var(--rose-d)); color: #fff; border-color: transparent; box-shadow: 0 2px 10px rgba(194,24,91,0.24); }
+.cat-result-count { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-mute); font-weight: 600; }
+.cat-clear-btn { background: none; border: none; color: var(--rose-d); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 8px; border-radius: 8px; font-family: inherit; }
+.cat-clear-btn:hover { background: var(--rose-pale); }
+.cat-load-more {
+  width: 100%; padding: 13px; border-radius: 14px;
+  border: 1.5px dashed var(--line-2); background: var(--cream-2);
+  font-family: inherit; font-size: 13px; font-weight: 700; color: var(--rose-d);
+  cursor: pointer; transition: all 0.16s;
+}
+.cat-load-more:hover { background: var(--rose-pale); border-color: var(--rose-l); }
 
 /* Lista de produtos */
 .cat-list { display: flex; flex-direction: column; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
