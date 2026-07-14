@@ -30,12 +30,14 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   softCircle(c, -80,       H,   400, 'rgba(194,24,91,0.07)');
   softCircle(c, W * 0.15, H * 0.5, 220, 'rgba(252,228,236,0.45)');
 
-  // ── ZONA A: LOGO ──────────────────────────────────────────────────────────
+  // ── ZONA A: LOGO  (y 0 → 260, sempre 260px) ──────────────────────────────
+  // Logo circle: centro (W/2, 68), r=52  →  topo=16, base=120
+  // Nome: y=162 (middle)
+  // Slogan: y=200 (se houver)
+  // Linha: y=242
   const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
-  const LOGO_R = 76; // raio do círculo da logo
-  const LOGO_CX = W / 2, LOGO_CY = LOGO_R + 18;
+  const LOGO_R = 52, LOGO_CX = W / 2, LOGO_CY = 68;
 
-  // Tenta carregar a logo real (rejjane-logo.jpeg no public)
   try {
     const logoImg = new Image();
     logoImg.crossOrigin = 'anonymous';
@@ -44,14 +46,14 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
       logoImg.onerror = () => rej();
       logoImg.src = '/rejjane-logo.jpeg';
     });
-    // Anel rose em volta
+    // Anel rose
     c.save();
     c.beginPath();
     c.arc(LOGO_CX, LOGO_CY, LOGO_R + 5, 0, Math.PI * 2);
     c.fillStyle = '#e91e63';
     c.fill();
     c.restore();
-    // Clip circular e desenha logo
+    // Clip circular
     c.save();
     c.beginPath();
     c.arc(LOGO_CX, LOGO_CY, LOGO_R, 0, Math.PI * 2);
@@ -61,46 +63,44 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
     c.drawImage(logoImg, LOGO_CX - lw / 2, LOGO_CY - lh / 2, lw, lh);
     c.restore();
   } catch {
-    // Fallback: losango decorativo
     c.save();
     c.translate(LOGO_CX, LOGO_CY);
     c.rotate(Math.PI / 4);
     c.fillStyle = '#e91e63';
-    c.fillRect(-12, -12, 24, 24);
+    c.fillRect(-10, -10, 20, 20);
     c.restore();
   }
 
-  // Nome da loja — serif itálico elegante
-  c.font = 'italic bold 68px Georgia, serif';
+  // Nome
+  c.font = 'italic bold 64px Georgia, serif';
   c.fillStyle = '#3d1020';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(storeName, W / 2, LOGO_CY + LOGO_R + 52);
+  c.fillText(storeName, W / 2, 162);
 
   // Slogan
-  const NAME_BOTTOM = LOGO_CY + LOGO_R + 52;
   if (cfg.slogan) {
-    c.font = '500 32px Nunito, sans-serif';
+    c.font = '500 30px Nunito, sans-serif';
     c.fillStyle = '#b07a8e';
-    c.textBaseline = 'top';
-    c.fillText(cfg.slogan, W / 2, NAME_BOTTOM + 22);
+    c.textBaseline = 'middle';
+    c.fillText(cfg.slogan, W / 2, 204);
   }
 
-  // Linha gradiente
-  const lineY = NAME_BOTTOM + (cfg.slogan ? 68 : 28);
+  // Linha gradiente (y=242 fixo)
   const lg = c.createLinearGradient(W / 2 - 180, 0, W / 2 + 180, 0);
   lg.addColorStop(0, 'transparent');
   lg.addColorStop(0.3, '#e91e63');
   lg.addColorStop(0.7, '#e91e63');
   lg.addColorStop(1, 'transparent');
   c.fillStyle = lg;
-  c.fillRect(W / 2 - 180, lineY, 360, 2);
+  c.fillRect(W / 2 - 180, 242, 360, 2);
 
   // ── ZONA B: FOTO ──────────────────────────────────────────────────────────
-  // Zona A ocupa: logo (LOGO_CY+LOGO_R=170) + nome(52) + slogan(opt 68) + linha(2) + gap(16)
-  const IMG_Y = cfg.slogan ? 330 : 270;
-  const PAD = 56, IMG_W = W - PAD * 2;
-  const IMG_H = 1160 - IMG_Y; // sempre termina em y=1160
+  // ── ZONA B: FOTO  (y 260 → 1140, sempre 880×880 quadrada) ──────────────
+  const IMG_SIZE = 880;
+  const IMG_Y = 260;
+  const PAD = (W - IMG_SIZE) / 2; // 100px cada lado
+  const IMG_W = IMG_SIZE, IMG_H = IMG_SIZE;
 
   // Sombra do card
   c.save();
@@ -155,7 +155,7 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
     c.restore();
   }
 
-  // ── ZONA C: INFO (posições absolutas fixas) ────────────────────────────────
+  // ── ZONA C: INFO  (y 1168 → 1920, sempre 752px) ─────────────────────────
   const cx = W / 2;
 
   // Marca · Categoria
@@ -163,51 +163,47 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   c.fillStyle = '#b07a8e';
   c.textAlign = 'center';
   c.textBaseline = 'alphabetic';
-  c.fillText(`${prod.marca.toUpperCase()}  ·  ${prod.cat.toUpperCase()}`, cx, 1238);
+  c.fillText(`${prod.marca.toUpperCase()}  ·  ${prod.cat.toUpperCase()}`, cx, 1218);
 
   // Divisor
   const dg = c.createLinearGradient(cx - 140, 0, cx + 140, 0);
   dg.addColorStop(0, 'transparent'); dg.addColorStop(0.5, '#e91e63'); dg.addColorStop(1, 'transparent');
   c.fillStyle = dg;
-  c.fillRect(cx - 140, 1250, 280, 2);
+  c.fillRect(cx - 140, 1232, 280, 2);
 
-  // Nome do produto — máx 2 linhas
+  // Nome do produto — máx 2 linhas  (y fixo: 1300, 1388)
   c.font = 'bold 74px Nunito, sans-serif';
   c.fillStyle = '#3d1020';
   const nameLines = clampLines(c, prod.nome, W - 120, 2);
-  nameLines.forEach((line, i) => c.fillText(line, cx, 1348 + i * 88));
+  nameLines.forEach((line, i) => c.fillText(line, cx, 1310 + i * 88));
 
-  // Bloco de preço — posição fixa a partir de y=1530
+  // Bloco de preço — posições fixas
   const hasDiscount = Boolean(prod.precoDe && prod.precoDe > prod.preco);
 
   if (hasDiscount) {
-    // Preço original riscado
     c.font = '400 40px Nunito, sans-serif';
     c.fillStyle = '#b07a8e';
     const deStr = `De ${fmtR$(prod.precoDe!)}`;
     const dtw = c.measureText(deStr).width;
-    c.fillText(deStr, cx, 1530);
-    c.fillRect(cx - dtw / 2, 1530 - 14, dtw, 2);
+    c.fillText(deStr, cx, 1502);
+    c.fillRect(cx - dtw / 2, 1488, dtw, 2);
 
-    // Preço atual
-    c.font = 'bold 122px Nunito, sans-serif';
+    c.font = 'bold 118px Nunito, sans-serif';
     c.fillStyle = '#e91e63';
-    c.fillText(fmtR$(prod.preco), cx, 1652);
+    c.fillText(fmtR$(prod.preco), cx, 1620);
 
-    // Economia
     const pct = Math.round((1 - prod.preco / prod.precoDe!) * 100);
-    c.font = 'bold 34px Nunito, sans-serif';
+    c.font = 'bold 32px Nunito, sans-serif';
     c.fillStyle = '#b71c1c';
-    c.fillText(`Você economiza ${pct}%`, cx, 1696);
+    c.fillText(`Você economiza ${pct}%`, cx, 1658);
   } else {
-    // Só preço
-    c.font = 'bold 130px Nunito, sans-serif';
+    c.font = 'bold 126px Nunito, sans-serif';
     c.fillStyle = '#e91e63';
-    c.fillText(fmtR$(prod.preco), cx, 1640);
+    c.fillText(fmtR$(prod.preco), cx, 1610);
   }
 
-  // ── BOTÃO "PEDIR AGORA" (estilo WhatsApp) ─────────────────────────────────
-  const BTN_Y = 1740, BTN_H = 92, BTN_W = 680;
+  // ── BOTÃO "PEDIR AGORA" ────────────────────────────────────────────────────
+  const BTN_Y = 1700, BTN_H = 92, BTN_W = 680;
   const BTN_X = (W - BTN_W) / 2;
 
   c.save();
