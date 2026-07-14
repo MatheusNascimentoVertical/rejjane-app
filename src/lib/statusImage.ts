@@ -38,13 +38,14 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   c.save(); c.globalAlpha = 0.06; c.fillStyle = '#fff';
   c.beginPath(); c.arc(W * 0.1, 300, 190, 0, Math.PI * 2); c.fill(); c.restore();
 
-  // Arco branco na base da faixa
+  // Arco branco na base da faixa (mais amplo para dar mais ar ao cabeçalho)
   c.save(); c.fillStyle = '#fff8f9';
-  c.beginPath(); c.ellipse(cx, 325, W / 2 + 70, 68, 0, 0, Math.PI); c.fill(); c.restore();
+  c.beginPath(); c.ellipse(cx, 342, W / 2 + 90, 76, 0, 0, Math.PI); c.fill(); c.restore();
 
   // ── LOGO + NOME DA LOJA ────────────────────────────────────────────────────
-  const LCY = 210, LR = 42;
-  c.save(); c.beginPath(); c.arc(cx, LCY, LR + 5, 0, Math.PI * 2);
+  // Logo maior (r=50) — mais presença visual no cabeçalho
+  const LCY = 205, LR = 50;
+  c.save(); c.beginPath(); c.arc(cx, LCY, LR + 6, 0, Math.PI * 2);
   c.fillStyle = 'rgba(255,255,255,0.88)'; c.fill(); c.restore();
 
   try {
@@ -60,18 +61,20 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   }
 
   const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
-  c.font = 'italic bold 54px Georgia, serif';
+  // Mais espaço abaixo da logo (y=288 vs 274)
+  c.font = 'italic bold 56px Georgia, serif';
   c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(storeName, cx, 274);
+  c.fillText(storeName, cx, 288);
 
   if (cfg.slogan) {
     c.font = '500 23px Nunito, sans-serif';
     c.fillStyle = 'rgba(255,255,255,0.8)'; c.textBaseline = 'middle';
-    c.fillText(cfg.slogan, cx, 308);
+    // Mais espaço abaixo do nome (y=324 vs 308)
+    c.fillText(cfg.slogan, cx, 324);
   }
 
-  // ── FOTO (y=345–1065, 720×720) ────────────────────────────────────────────
-  const IS = 720, IPAD = (W - IS) / 2, IY = 345;
+  // ── FOTO (y=360–1080, 720×720) ────────────────────────────────────────────
+  const IS = 720, IPAD = (W - IS) / 2, IY = 360;
 
   c.save();
   c.shadowColor = 'rgba(173,20,87,0.16)'; c.shadowBlur = 60; c.shadowOffsetY = 22;
@@ -82,8 +85,10 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
       const img = new Image(); img.crossOrigin = 'anonymous';
       await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); img.src = prod.fotoUrl!; });
       c.save(); rr(c, IPAD, IY, IS, IS, 48); c.clip();
-      const sc = Math.max(IS / img.width, IS / img.height);
-      c.drawImage(img, IPAD + (IS - img.width * sc) / 2, IY + (IS - img.height * sc) / 2, img.width * sc, img.height * sc);
+      // Contain: produto inteiro sempre visível, independente do tamanho da foto
+      const sc = Math.min(IS / img.width, IS / img.height);
+      const dw = img.width * sc, dh = img.height * sc;
+      c.drawImage(img, IPAD + (IS - dw) / 2, IY + (IS - dh) / 2, dw, dh);
       c.restore();
     } catch { emojiBox(c, prod.icon || '🌸', IPAD, IY, IS, IS); }
   } else { emojiBox(c, prod.icon || '🌸', IPAD, IY, IS, IS); }
@@ -102,8 +107,8 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
     c.fillText(badge, BX + BW / 2, BY + BH / 2);
   }
 
-  // ── INFO DO PRODUTO (y=1085 em diante) ────────────────────────────────────
-  const infoY = 1085;
+  // ── INFO DO PRODUTO (y=1098 em diante) ────────────────────────────────────
+  const infoY = 1098;
 
   // ① Marca · Categoria — pills separadas
   c.font = '700 23px Nunito, sans-serif';
