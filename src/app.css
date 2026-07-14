@@ -433,6 +433,14 @@ body {
   transition: all 0.15s;
 }
 .cat-row-del:hover { background: #fde8e8; border-color: #e57373; color: #c62828; }
+.cat-row-share {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1.5px solid var(--line); background: transparent;
+  color: var(--ink-mute); cursor: pointer; transition: all 0.15s;
+}
+.cat-row-share:hover { background: #e8f5e9; border-color: #66bb6a; color: #2e7d32; }
+.cat-row-share:disabled { opacity: 0.5; cursor: default; }
 
 /* ─── Caixa ─── */
 .caixa { display: flex; flex-direction: column; gap: 18px; }

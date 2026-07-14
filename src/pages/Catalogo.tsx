@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MARCAS } from '../data/constants';
 import { fmtR$ } from '../lib/helpers';
-import type { AppCtx } from '../types';
+import { gerarImagemStatus } from '../lib/statusImage';
+import type { AppCtx, Produto } from '../types';
 
 type Props = { ctx: AppCtx };
 
 export function Catalogo({ ctx }: Props) {
-  const { prods, setProds, peds, setModal } = ctx;
+  const { prods, setProds, peds, setModal, cfg } = ctx;
+  const [compartilhando, setCompartilhando] = useState<string | null>(null);
   const [marcaAtiva, setMarcaAtiva] = useState('Todos');
   const [catAtiva, setCatAtiva] = useState('Todos');
   const [busca, setBusca] = useState('');
@@ -42,6 +44,28 @@ export function Catalogo({ ctx }: Props) {
   };
 
   const ativos = prods.filter(p => p.ativo).length;
+
+  const postarStatus = async (p: Produto) => {
+    setCompartilhando(p.id);
+    try {
+      const blob = await gerarImagemStatus(p, cfg);
+      const file = new File([blob], `${p.nome.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: p.nome });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      // user cancelled or error — silently ignore
+    } finally {
+      setCompartilhando(null);
+    }
+  };
 
   return (
     <div className="catalogo">
@@ -162,6 +186,18 @@ export function Catalogo({ ctx }: Props) {
                     onClick={() => setModal({ tipo: 'prod', dados: p })}
                   >
                     Editar
+                  </button>
+
+                  <button
+                    className={`cat-row-share${compartilhando === p.id ? ' loading' : ''}`}
+                    onClick={() => postarStatus(p)}
+                    title="Gerar imagem para Status do WhatsApp"
+                    disabled={compartilhando === p.id}
+                  >
+                    {compartilhando === p.id
+                      ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    }
                   </button>
 
                   <button
