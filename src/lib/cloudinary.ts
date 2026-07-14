@@ -1,4 +1,4 @@
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string;
+const CLOUD_NAME = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string) || 'dxpanl3xs';
 const UPLOAD_PRESET = 'rejjane_produtos';
 
 export async function uploadFoto(file: File): Promise<string> {
