@@ -4,12 +4,10 @@ import { fmtR$ } from './helpers';
 /**
  * Layout WhatsApp Status 1080×1920
  *
- * y=0–320    Faixa rose (header decorativo — se o chrome cobrir, não importa)
- *   y=210    Logo circular (r=40) — abaixo da zona de risco do chrome (~136px)
- *   y=272    Nome da loja (branco)
- * y=320      Arco branco (transição)
- * y=345–1065 Foto do produto (720×720)
- * y=1085–    Info: marca, nome, preço, botão, rodapé  (max ~y=1620)
+ * y=0–320    Faixa rose   — logo + nome da loja (chrome cobre topo, mas logo fica em y=210)
+ * y=320      Arco branco
+ * y=345–1065 Foto 720×720
+ * y=1085–    Info:  marca | nome | âncora de preço | economize badge | CTA | rodapé
  */
 export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blob> {
   const W = 1080, H = 1920;
@@ -20,45 +18,35 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
 
   await document.fonts.ready;
 
-  // ── FUNDO GERAL (cream + blush) ───────────────────────────────────────────
+  // ── FUNDO ─────────────────────────────────────────────────────────────────
   c.fillStyle = '#fff8f9';
   c.fillRect(0, 0, W, H);
-  const bgGrad = c.createLinearGradient(0, H * 0.5, 0, H);
-  bgGrad.addColorStop(0, 'rgba(252,228,236,0)');
-  bgGrad.addColorStop(1, 'rgba(249,213,227,0.65)');
-  c.fillStyle = bgGrad;
-  c.fillRect(0, 0, W, H);
+  const bgG = c.createLinearGradient(0, H * 0.45, 0, H);
+  bgG.addColorStop(0, 'rgba(252,228,236,0)');
+  bgG.addColorStop(1, 'rgba(249,213,227,0.6)');
+  c.fillStyle = bgG; c.fillRect(0, 0, W, H);
 
-  // ── FAIXA ROSE (y=0–320) ─────────────────────────────────────────────────
-  // Degradê rose do topo para baixo
-  const bandGrad = c.createLinearGradient(0, 0, 0, 320);
-  bandGrad.addColorStop(0, '#c2185b');
-  bandGrad.addColorStop(1, '#e91e63');
-  c.fillStyle = bandGrad;
-  c.fillRect(0, 0, W, 320);
+  // ── FAIXA ROSE (y=0–320) ──────────────────────────────────────────────────
+  const bandG = c.createLinearGradient(0, 0, 0, 320);
+  bandG.addColorStop(0, '#ad1457');
+  bandG.addColorStop(1, '#e91e63');
+  c.fillStyle = bandG; c.fillRect(0, 0, W, 320);
 
-  // Círculos decorativos dentro da faixa
-  c.save(); c.globalAlpha = 0.14; c.fillStyle = '#fff';
-  c.beginPath(); c.arc(W * 0.88, -30, 240, 0, Math.PI * 2); c.fill();
-  c.restore();
-  c.save(); c.globalAlpha = 0.07; c.fillStyle = '#fff';
-  c.beginPath(); c.arc(W * 0.12, 290, 180, 0, Math.PI * 2); c.fill();
-  c.restore();
+  // Reflexos decorativos dentro da faixa
+  c.save(); c.globalAlpha = 0.13; c.fillStyle = '#fff';
+  c.beginPath(); c.arc(W * 0.86, -20, 260, 0, Math.PI * 2); c.fill(); c.restore();
+  c.save(); c.globalAlpha = 0.06; c.fillStyle = '#fff';
+  c.beginPath(); c.arc(W * 0.1, 300, 190, 0, Math.PI * 2); c.fill(); c.restore();
 
-  // Arco branco na base da faixa (transição suave)
-  c.save();
-  c.fillStyle = '#fff8f9';
-  c.beginPath();
-  c.ellipse(cx, 325, W / 2 + 70, 68, 0, 0, Math.PI);
-  c.fill();
-  c.restore();
+  // Arco branco na base da faixa
+  c.save(); c.fillStyle = '#fff8f9';
+  c.beginPath(); c.ellipse(cx, 325, W / 2 + 70, 68, 0, 0, Math.PI); c.fill(); c.restore();
 
-  // Logo circular — centro y=210, raio=40 (topo em y=170, abaixo dos ~136px de risco)
-  const LCY = 210, LR = 40;
-  // Anel branco
+  // ── LOGO + NOME DA LOJA ────────────────────────────────────────────────────
+  const LCY = 210, LR = 42;
   c.save(); c.beginPath(); c.arc(cx, LCY, LR + 5, 0, Math.PI * 2);
-  c.fillStyle = 'rgba(255,255,255,0.9)'; c.fill(); c.restore();
-  // Imagem ou fallback
+  c.fillStyle = 'rgba(255,255,255,0.88)'; c.fill(); c.restore();
+
   try {
     const li = new Image(); li.crossOrigin = 'anonymous';
     await new Promise<void>((res, rej) => { li.onload = () => res(); li.onerror = () => rej(); li.src = '/rejjane-logo.jpeg'; });
@@ -68,126 +56,160 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
     c.restore();
   } catch {
     c.save(); c.beginPath(); c.arc(cx, LCY, LR, 0, Math.PI * 2);
-    c.fillStyle = '#f8bbd0'; c.fill(); c.restore();
+    c.fillStyle = '#f48fb1'; c.fill(); c.restore();
   }
 
-  // Nome da loja
   const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
-  c.font = 'italic bold 52px Georgia, serif';
+  c.font = 'italic bold 54px Georgia, serif';
   c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(storeName, cx, 272);
+  c.fillText(storeName, cx, 274);
 
-  // Slogan (opcional, menor)
   if (cfg.slogan) {
-    c.font = '500 22px Nunito, sans-serif';
-    c.fillStyle = 'rgba(255,255,255,0.82)'; c.textBaseline = 'middle';
-    c.fillText(cfg.slogan, cx, 306);
+    c.font = '500 23px Nunito, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.8)'; c.textBaseline = 'middle';
+    c.fillText(cfg.slogan, cx, 308);
   }
 
-  // ── FOTO  (y 345–1065, 720×720) ──────────────────────────────────────────
+  // ── FOTO (y=345–1065, 720×720) ────────────────────────────────────────────
   const IS = 720, IPAD = (W - IS) / 2, IY = 345;
 
-  // Sombra
   c.save();
-  c.shadowColor = 'rgba(194,24,91,0.18)'; c.shadowBlur = 56; c.shadowOffsetY = 18;
-  c.fillStyle = '#fff'; rr(c, IPAD, IY, IS, IS, 44); c.fill();
-  c.restore();
+  c.shadowColor = 'rgba(173,20,87,0.16)'; c.shadowBlur = 60; c.shadowOffsetY = 22;
+  c.fillStyle = '#fff'; rr(c, IPAD, IY, IS, IS, 48); c.fill(); c.restore();
 
-  // Imagem ou emoji
   if (prod.fotoUrl) {
     try {
       const img = new Image(); img.crossOrigin = 'anonymous';
       await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); img.src = prod.fotoUrl!; });
-      c.save(); rr(c, IPAD, IY, IS, IS, 44); c.clip();
+      c.save(); rr(c, IPAD, IY, IS, IS, 48); c.clip();
       const sc = Math.max(IS / img.width, IS / img.height);
       c.drawImage(img, IPAD + (IS - img.width * sc) / 2, IY + (IS - img.height * sc) / 2, img.width * sc, img.height * sc);
       c.restore();
     } catch { emojiBox(c, prod.icon || '🌸', IPAD, IY, IS, IS); }
   } else { emojiBox(c, prod.icon || '🌸', IPAD, IY, IS, IS); }
 
-  // Badge (canto superior direito da foto)
+  // Badge de desconto/destaque
   const badge = mkBadge(prod);
   if (badge) {
     c.font = 'bold 30px Nunito, sans-serif';
     const bTw = c.measureText(badge).width;
-    const BW = bTw + 48, BH = 56, BX = IPAD + IS - BW - 16, BY = IY + 16;
+    const BW = bTw + 52, BH = 58, BX = IPAD + IS - BW - 16, BY = IY + 16;
     c.save();
+    c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = 12; c.shadowOffsetY = 4;
     c.fillStyle = badge.includes('OFF') ? '#b71c1c' : badge.includes('⭐') ? '#e65100' : '#1565c0';
-    rr(c, BX, BY, BW, BH, 12); c.fill();
+    rr(c, BX, BY, BW, BH, 12); c.fill(); c.restore();
     c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(badge, BX + BW / 2, BY + BH / 2);
-    c.restore();
   }
 
-  // ── INFO PRODUTO  (y 1085 em diante) ─────────────────────────────────────
+  // ── INFO DO PRODUTO (y=1085 em diante) ────────────────────────────────────
   const infoY = 1085;
 
-  // Marca · Categoria
-  c.font = '700 27px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
+  // ① Marca · Categoria — pills separadas
+  c.font = '700 23px Nunito, sans-serif';
+  const marcaTxt = prod.marca.toUpperCase();
+  const catTxt   = prod.cat.toUpperCase();
+  const mW = c.measureText(marcaTxt).width + 40;
+  const ctW = c.measureText(catTxt).width + 40;
+  const pillH = 44, pillGap = 14;
+  const pillsStartX = cx - (mW + ctW + pillGap) / 2;
+  const pillY = infoY + 20;
+
+  c.save(); c.fillStyle = '#fce8f0'; rr(c, pillsStartX, pillY, mW, pillH, pillH / 2); c.fill();
+  c.fillStyle = '#c2185b'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText(marcaTxt, pillsStartX + 20, pillY + pillH / 2); c.restore();
+
+  c.save(); c.fillStyle = 'rgba(176,122,142,0.13)'; rr(c, pillsStartX + mW + pillGap, pillY, ctW, pillH, pillH / 2); c.fill();
+  c.fillStyle = '#b07a8e'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText(catTxt, pillsStartX + mW + pillGap + 20, pillY + pillH / 2); c.restore();
+
+  // Divisor rose
+  const divY = pillY + pillH + 24;
+  const dg = c.createLinearGradient(cx - 160, 0, cx + 160, 0);
+  dg.addColorStop(0, 'transparent'); dg.addColorStop(0.3, '#e91e63'); dg.addColorStop(0.7, '#e91e63'); dg.addColorStop(1, 'transparent');
+  c.fillStyle = dg; c.fillRect(cx - 160, divY, 320, 2.5);
+
+  // ② Nome do produto (máx 2 linhas, 68px, mais espaçamento)
+  c.font = 'bold 68px Nunito, sans-serif'; c.fillStyle = '#3d1020';
   c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  c.fillText(`${prod.marca.toUpperCase()}  ·  ${prod.cat.toUpperCase()}`, cx, infoY + 28);
+  const nameLines = clampLines(c, prod.nome, W - 100, 2);
+  const nameStartY = divY + 72;
+  nameLines.forEach((line, i) => c.fillText(line, cx, nameStartY + i * 82));
+  const nameEndY = nameStartY + (nameLines.length - 1) * 82;
 
-  // Divisor
-  const dg = c.createLinearGradient(cx - 130, 0, cx + 130, 0);
-  dg.addColorStop(0, 'transparent'); dg.addColorStop(0.4, '#e91e63'); dg.addColorStop(0.6, '#e91e63'); dg.addColorStop(1, 'transparent');
-  c.fillStyle = dg; c.fillRect(cx - 130, infoY + 44, 260, 2);
-
-  // Nome (máx 2 linhas, 64px)
-  c.font = 'bold 64px Nunito, sans-serif'; c.fillStyle = '#3d1020';
-  const nameLines = clampLines(c, prod.nome, W - 120, 2);
-  const nameStartY = infoY + 90;
-  nameLines.forEach((line, i) => c.fillText(line, cx, nameStartY + i * 76));
-  const nameEndY = nameStartY + (nameLines.length - 1) * 76;
-
-  // Preço
-  const priceTopY = Math.max(nameEndY + 42, infoY + 210);
+  // ③ Bloco de preço — âncora de desconto + preço destaque
+  const priceTopY = Math.max(nameEndY + 54, infoY + 238);
   const hasDiscount = Boolean(prod.precoDe && prod.precoDe > prod.preco);
 
   if (hasDiscount) {
-    c.font = '400 34px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
+    // De R$ riscado (âncora de preço)
+    c.font = '400 36px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
     const deStr = `De ${fmtR$(prod.precoDe!)}`;
     const dtw = c.measureText(deStr).width;
     c.fillText(deStr, cx, priceTopY);
-    c.fillRect(cx - dtw / 2, priceTopY - 12, dtw, 2);
+    c.save(); c.strokeStyle = '#b07a8e'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(cx - dtw / 2, priceTopY - 14); c.lineTo(cx + dtw / 2, priceTopY - 14); c.stroke(); c.restore();
 
-    c.font = 'bold 104px Nunito, sans-serif'; c.fillStyle = '#e91e63';
-    c.fillText(fmtR$(prod.preco), cx, priceTopY + 102);
-
-    const pct = Math.round((1 - prod.preco / prod.precoDe!) * 100);
-    c.font = 'bold 28px Nunito, sans-serif'; c.fillStyle = '#b71c1c';
-    c.fillText(`Você economiza ${pct}%`, cx, priceTopY + 138);
-  } else {
+    // Preço principal (grande)
     c.font = 'bold 108px Nunito, sans-serif'; c.fillStyle = '#e91e63';
-    c.fillText(fmtR$(prod.preco), cx, priceTopY + 100);
+    c.fillText(fmtR$(prod.preco), cx, priceTopY + 108);
+
+    // ④ Badge "Você economiza X%" — destaque real de marketing
+    const pct = Math.round((1 - prod.preco / prod.precoDe!) * 100);
+    const ecoTxt = `💰 Você economiza ${pct}%`;
+    c.font = 'bold 28px Nunito, sans-serif';
+    const ew = c.measureText(ecoTxt).width + 56;
+    const eX = cx - ew / 2, eY = priceTopY + 124;
+    c.save();
+    c.shadowColor = 'rgba(183,28,28,0.18)'; c.shadowBlur = 14; c.shadowOffsetY = 4;
+    c.fillStyle = '#fde8ee'; rr(c, eX, eY, ew, 52, 26); c.fill(); c.restore();
+    // Borda sutil
+    c.save(); c.strokeStyle = 'rgba(183,28,28,0.18)'; c.lineWidth = 1.5;
+    rr(c, eX, eY, ew, 52, 26); c.stroke(); c.restore();
+    c.fillStyle = '#b71c1c'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(ecoTxt, cx, eY + 26);
+  } else {
+    // Preço único (mais espaço, centralizado)
+    c.font = 'bold 114px Nunito, sans-serif'; c.fillStyle = '#e91e63';
+    c.fillText(fmtR$(prod.preco), cx, priceTopY + 108);
   }
 
-  // ── BOTÃO PEDIR AGORA ─────────────────────────────────────────────────────
-  const btnTopY = hasDiscount ? priceTopY + 162 : priceTopY + 122;
-  const BTN_H = 88, BTN_W = 660, BTN_X = (W - BTN_W) / 2;
+  // ── BOTÃO PEDIR AGORA ────────────────────────────────────────────────────
+  const btnTopY = hasDiscount ? priceTopY + 198 : priceTopY + 140;
+  const BTN_H = 92, BTN_W = 700, BTN_X = (W - BTN_W) / 2;
 
   c.save();
-  c.shadowColor = 'rgba(37,211,102,0.38)'; c.shadowBlur = 20; c.shadowOffsetY = 6;
+  c.shadowColor = 'rgba(37,211,102,0.45)'; c.shadowBlur = 28; c.shadowOffsetY = 8;
   c.fillStyle = '#25D366'; rr(c, BTN_X, btnTopY, BTN_W, BTN_H, BTN_H / 2); c.fill();
   c.restore();
 
-  c.font = '34px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('💬', BTN_X + 52, btnTopY + BTN_H / 2 + 2);
+  c.font = '36px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('💬', BTN_X + 56, btnTopY + BTN_H / 2 + 2);
 
-  c.font = 'bold 38px Nunito, sans-serif'; c.fillStyle = '#fff';
+  c.font = 'bold 40px Nunito, sans-serif'; c.fillStyle = '#fff';
   c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('PEDIR AGORA', BTN_X + BTN_W / 2 + 14, btnTopY + BTN_H / 2);
+  c.fillText('PEDIR AGORA', BTN_X + BTN_W / 2 + 16, btnTopY + BTN_H / 2);
 
-  // ── RODAPÉ ───────────────────────────────────────────────────────────────
+  // Texto de reforço abaixo do botão
+  c.font = '500 24px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('✓ Resposta rápida  ✓ Entrega garantida', cx, btnTopY + BTN_H + 34);
+
+  // ── RODAPÉ ────────────────────────────────────────────────────────────────
   const footerParts: string[] = [];
   if (cfg.telefone) footerParts.push(`📱 ${cfg.telefone}`);
   if (cfg.instagram) footerParts.push(`📸 ${cfg.instagram}`);
   if (footerParts.length) {
-    c.font = '500 25px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
+    const footerY = btnTopY + BTN_H + 72;
+    // Linha tênue antes do rodapé
+    c.save(); c.globalAlpha = 0.18; c.fillStyle = '#e91e63';
+    c.fillRect(cx - 120, footerY - 18, 240, 1.5); c.restore();
+    c.font = '500 26px Nunito, sans-serif'; c.fillStyle = '#b07a8e';
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    c.fillText(footerParts.join('    '), cx, btnTopY + BTN_H + 46);
+    c.fillText(footerParts.join('    '), cx, footerY);
   }
 
-  // Círculo decorativo no canto inferior (zona sacrificial)
+  // Decoração de fundo (zona sacrificial)
   softCircle(c, -60, H, 380, 'rgba(194,24,91,0.06)');
 
   return new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', 0.94));
@@ -245,7 +267,7 @@ function emojiBox(c: CanvasRenderingContext2D, emoji: string, x: number, y: numb
   c.save();
   const bg = c.createLinearGradient(x, y, x + w, y + h);
   bg.addColorStop(0, '#fce8f0'); bg.addColorStop(1, '#f9d5e3');
-  c.fillStyle = bg; rr(c, x, y, w, h, 44); c.fill();
+  c.fillStyle = bg; rr(c, x, y, w, h, 48); c.fill();
   c.font = `${Math.floor(Math.min(w, h) * 0.36)}px serif`;
   c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText(emoji, x + w / 2, y + h / 2); c.restore();
