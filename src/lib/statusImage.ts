@@ -8,35 +8,91 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // Background gradient cream → blush
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#fff5f8');
-  bg.addColorStop(0.5, '#fce8f0');
-  bg.addColorStop(1, '#f9d5e3');
-  ctx.fillStyle = bg;
+  await document.fonts.ready;
+
+  // ── Background: pure cream, very clean ──
+  ctx.fillStyle = '#fff8f9';
   ctx.fillRect(0, 0, W, H);
 
-  // Decorative blurred circles
-  drawCircle(ctx, W + 80, -80, 480, 'rgba(233,30,99,0.12)');
-  drawCircle(ctx, -80, H + 80, 380, 'rgba(194,24,91,0.09)');
-  drawCircle(ctx, W * 0.5, H * 0.42, 300, 'rgba(252,228,236,0.6)');
+  // Subtle blush wash on bottom half
+  const wash = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  wash.addColorStop(0, 'rgba(252,228,236,0)');
+  wash.addColorStop(1, 'rgba(252,228,236,0.55)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, W, H);
 
-  // ── Top pill badge (store name) ──
-  const storeName = cfg.nomeEmpresa || 'Minha Loja';
+  // Two large decorative circles (blurred-look via low alpha fills)
+  for (let i = 0; i < 3; i++) {
+    ctx.save();
+    ctx.globalAlpha = 0.07 - i * 0.02;
+    ctx.fillStyle = '#e91e63';
+    ctx.beginPath();
+    ctx.arc(W + 60, 0, 520 + i * 80, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  for (let i = 0; i < 3; i++) {
+    ctx.save();
+    ctx.globalAlpha = 0.055 - i * 0.015;
+    ctx.fillStyle = '#c2185b';
+    ctx.beginPath();
+    ctx.arc(-60, H, 420 + i * 70, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── WORDMARK / LOGO at top ──
+  const storeName = cfg.nomeEmpresa || 'Rejjane Vendas';
+  const LOGO_CY = 130;
+
+  // Small rose diamond accent above name
   ctx.save();
+  ctx.translate(W / 2, LOGO_CY - 68);
+  ctx.rotate(Math.PI / 4);
   ctx.fillStyle = '#e91e63';
-  rRect(ctx, W / 2 - 260, 68, 520, 96, 48);
-  ctx.fill();
+  ctx.fillRect(-10, -10, 20, 20);
   ctx.restore();
-  await document.fonts.ready;
-  ctx.font = '800 46px Nunito, sans-serif';
-  ctx.fillStyle = '#fff';
+
+  // Store name — elegant script style
+  ctx.font = 'italic 800 72px Georgia, "Times New Roman", serif';
+  ctx.fillStyle = '#3d1020';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(storeName, W / 2, 68 + 48);
+  ctx.fillText(storeName, W / 2, LOGO_CY);
 
-  // ── Product image ──
-  const imgX = 90, imgY = 230, imgSize = W - 180;
+  // Slogan if available
+  if (cfg.slogan) {
+    ctx.font = '600 32px Nunito, sans-serif';
+    ctx.fillStyle = '#b07a8e';
+    ctx.textBaseline = 'top';
+    ctx.fillText(cfg.slogan, W / 2, LOGO_CY + 46);
+  }
+
+  // Thin rose underline below name
+  const lineGrad = ctx.createLinearGradient(W / 2 - 160, 0, W / 2 + 160, 0);
+  lineGrad.addColorStop(0, 'transparent');
+  lineGrad.addColorStop(0.2, '#e91e63');
+  lineGrad.addColorStop(0.8, '#e91e63');
+  lineGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = lineGrad;
+  ctx.fillRect(W / 2 - 160, LOGO_CY + (cfg.slogan ? 88 : 48), 320, 2);
+
+  // ── PRODUCT IMAGE ──
+  const imgPad = 56;
+  const imgY = cfg.slogan ? 310 : 272;
+  const imgSize = W - imgPad * 2; // 968px
+
+  // White card behind photo with strong shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(194,24,91,0.18)';
+  ctx.shadowBlur = 72;
+  ctx.shadowOffsetY = 24;
+  ctx.fillStyle = '#fff';
+  rRect(ctx, imgPad, imgY, imgSize, imgSize, 52);
+  ctx.fill();
+  ctx.restore();
+
+  // Photo
   if (prod.fotoUrl) {
     try {
       const img = new Image();
@@ -47,83 +103,131 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
         img.src = prod.fotoUrl!;
       });
       ctx.save();
-      ctx.beginPath();
-      rRect(ctx, imgX, imgY, imgSize, imgSize, 56);
+      rRect(ctx, imgPad, imgY, imgSize, imgSize, 52);
       ctx.clip();
-      // draw cover-fit
       const scale = Math.max(imgSize / img.width, imgSize / img.height);
       const dw = img.width * scale, dh = img.height * scale;
-      ctx.drawImage(img, imgX + (imgSize - dw) / 2, imgY + (imgSize - dh) / 2, dw, dh);
+      ctx.drawImage(img, imgPad + (imgSize - dw) / 2, imgY + (imgSize - dh) / 2, dw, dh);
       ctx.restore();
     } catch {
-      drawEmojiBox(ctx, prod.icon || '🌸', imgX, imgY, imgSize);
+      drawEmojiBox(ctx, prod.icon || '🌸', imgPad, imgY, imgSize);
     }
   } else {
-    drawEmojiBox(ctx, prod.icon || '🌸', imgX, imgY, imgSize);
+    drawEmojiBox(ctx, prod.icon || '🌸', imgPad, imgY, imgSize);
   }
 
-  // ── Bottom info card ──
-  const cardY = imgY + imgSize + 32;
-  const cardH = H - cardY - 44;
-  ctx.save();
-  ctx.shadowColor = 'rgba(194,24,91,0.16)';
-  ctx.shadowBlur = 48;
-  ctx.shadowOffsetY = 8;
-  ctx.fillStyle = '#fff';
-  rRect(ctx, 44, cardY, W - 88, cardH, 44);
-  ctx.fill();
-  ctx.restore();
+  // ── MARKETING BADGE (corner of photo) ──
+  const badge = marketingBadge(prod);
+  if (badge) {
+    const isDiscount = badge.includes('OFF');
+    const badgeColor = isDiscount ? '#b71c1c' : badge.includes('⭐') ? '#e65100' : '#1b5e20';
+    ctx.font = 'bold 30px Nunito, sans-serif';
+    const bTw = ctx.measureText(badge).width;
+    const bW = bTw + 48, bH = 56, bR = 12;
+    const bX = imgPad + imgSize - bW - 20, bY = imgY + 20;
+    ctx.save();
+    ctx.fillStyle = badgeColor;
+    rRect(ctx, bX, bY, bW, bH, bR);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badge, bX + bW / 2, bY + bH / 2);
+    ctx.restore();
+  }
 
+  // ── INFO SECTION ──
+  const infoY = imgY + imgSize + 44;
   const cx = W / 2;
 
-  // Brand / category tag
-  ctx.font = '700 34px Nunito, sans-serif';
+  // Brand · Category
+  ctx.font = '700 32px Nunito, sans-serif';
   ctx.fillStyle = '#b07a8e';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`${prod.marca}  ·  ${prod.cat}`.toUpperCase(), cx, cardY + 66);
+  ctx.fillText(`${prod.marca.toUpperCase()}  ·  ${prod.cat.toUpperCase()}`, cx, infoY + 40);
 
-  // Rose separator
-  ctx.fillStyle = '#e91e63';
-  ctx.fillRect(cx - 56, cardY + 80, 112, 3);
-
-  // Product name (wraps if long)
-  ctx.font = '800 72px Nunito, sans-serif';
+  // Product name
+  ctx.font = 'bold 76px Nunito, sans-serif';
   ctx.fillStyle = '#3d1020';
-  wrapText(ctx, prod.nome, cx, cardY + 160, W - 160, 84);
+  const nameLines = wrapTextLines(ctx, prod.nome, W - 120, 88);
+  nameLines.forEach((line, i) => ctx.fillText(line, cx, infoY + 140 + i * 88));
+  const afterName = infoY + 140 + nameLines.length * 88;
 
-  // Price
-  ctx.font = '900 118px Nunito, sans-serif';
-  ctx.fillStyle = '#e91e63';
-  const precoY = cardY + cardH - 148;
-  ctx.fillText(fmtR$(prod.preco), cx, precoY);
-
-  // WhatsApp CTA
-  ctx.font = '600 38px Nunito, sans-serif';
-  ctx.fillStyle = '#7a3a52';
-  ctx.fillText('💬 Disponível! Me chame para encomendar', cx, precoY + 60);
-
-  // Footer phone/instagram if available
-  const footer: string[] = [];
-  if (cfg.telefone) footer.push(`📱 ${cfg.telefone}`);
-  if (cfg.instagram) footer.push(`📸 ${cfg.instagram}`);
-  if (footer.length) {
-    ctx.font = '500 32px Nunito, sans-serif';
+  // Price block
+  if (prod.precoDe && prod.precoDe > prod.preco) {
+    // Crossed-out original price
+    ctx.font = '500 40px Nunito, sans-serif';
     ctx.fillStyle = '#b07a8e';
-    ctx.fillText(footer.join('   '), cx, H - 56);
+    const deStr = `De ${fmtR$(prod.precoDe)}`;
+    const deTw = ctx.measureText(deStr).width;
+    ctx.fillText(deStr, cx, afterName + 56);
+    // Strikethrough line
+    ctx.fillStyle = '#b07a8e';
+    ctx.fillRect(cx - deTw / 2, afterName + 56 - 14, deTw, 2);
+
+    ctx.font = 'bold 128px Nunito, sans-serif';
+    ctx.fillStyle = '#e91e63';
+    ctx.fillText(fmtR$(prod.preco), cx, afterName + 180);
+
+    const pct = Math.round((1 - prod.preco / prod.precoDe) * 100);
+    ctx.font = 'bold 34px Nunito, sans-serif';
+    ctx.fillStyle = '#b71c1c';
+    ctx.fillText(`Você economiza ${pct}%`, cx, afterName + 218);
+  } else {
+    ctx.font = 'bold 128px Nunito, sans-serif';
+    ctx.fillStyle = '#e91e63';
+    ctx.fillText(fmtR$(prod.preco), cx, afterName + 148);
   }
 
-  return new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', 0.93));
-}
+  // ── CTA pill button ──
+  const hasDiscount = prod.precoDe && prod.precoDe > prod.preco;
+  const ctaY = afterName + (hasDiscount ? 270 : 210);
 
-function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
   ctx.save();
-  ctx.fillStyle = color;
-  ctx.filter = 'blur(60px)';
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  const ctaGrad = ctx.createLinearGradient(cx - 300, ctaY, cx + 300, ctaY + 80);
+  ctaGrad.addColorStop(0, '#e91e63');
+  ctaGrad.addColorStop(1, '#c2185b');
+  ctx.fillStyle = ctaGrad;
+  ctx.shadowColor = 'rgba(194,24,91,0.35)';
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetY = 6;
+  rRect(ctx, cx - 310, ctaY, 620, 84, 42);
   ctx.fill();
   ctx.restore();
+
+  ctx.font = 'bold 38px Nunito, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💬  Peça agora pelo WhatsApp', cx, ctaY + 42);
+
+  // ── FOOTER ──
+  const footerY = H - 54;
+  const footerParts: string[] = [];
+  if (cfg.telefone) footerParts.push(`📱 ${cfg.telefone}`);
+  if (cfg.instagram) footerParts.push(`📸 ${cfg.instagram}`);
+  if (footerParts.length) {
+    ctx.font = '500 30px Nunito, sans-serif';
+    ctx.fillStyle = '#b07a8e';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(footerParts.join('     '), cx, footerY);
+  }
+
+  return new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', 0.94));
+}
+
+function marketingBadge(prod: Produto): string {
+  if (prod.precoDe && prod.precoDe > prod.preco) {
+    const pct = Math.round((1 - prod.preco / prod.precoDe) * 100);
+    return `🔥 ${pct}% OFF`;
+  }
+  if (typeof prod.estoque === 'number' && prod.estoque > 0 && prod.estoque <= 5) {
+    return `⚡ Só ${prod.estoque} restante${prod.estoque > 1 ? 's' : ''}`;
+  }
+  if (prod.destaque) return '⭐ Mais vendido';
+  return '';
 }
 
 function rRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -140,37 +244,32 @@ function rRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
   ctx.closePath();
 }
 
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string, x: number, y: number, maxW: number, lineH: number,
-) {
+function wrapTextLines(ctx: CanvasRenderingContext2D, text: string, maxW: number, _lineH: number): string[] {
   const words = text.split(' ');
+  const lines: string[] = [];
   let line = '';
-  let lineY = y;
   for (const word of words) {
     const test = line ? `${line} ${word}` : word;
     if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line, x, lineY);
+      lines.push(line);
       line = word;
-      lineY += lineH;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line, x, lineY);
+  if (line) lines.push(line);
+  return lines;
 }
 
-function drawEmojiBox(
-  ctx: CanvasRenderingContext2D, emoji: string, x: number, y: number, size: number,
-) {
+function drawEmojiBox(ctx: CanvasRenderingContext2D, emoji: string, x: number, y: number, size: number) {
   ctx.save();
   const bg = ctx.createLinearGradient(x, y, x + size, y + size);
   bg.addColorStop(0, '#fce8f0');
   bg.addColorStop(1, '#f9d5e3');
   ctx.fillStyle = bg;
-  rRect(ctx, x, y, size, size, 56);
+  rRect(ctx, x, y, size, size, 52);
   ctx.fill();
-  ctx.font = `${Math.floor(size * 0.42)}px serif`;
+  ctx.font = `${Math.floor(size * 0.38)}px serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(emoji, x + size / 2, y + size / 2);
