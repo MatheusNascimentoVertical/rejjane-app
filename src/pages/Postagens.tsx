@@ -25,9 +25,6 @@ export function Postagens({ ctx }: Props) {
   const [modoEstoque, setModoEstoque] = useState(false);
   const [edits, setEdits] = useState<Record<string, string>>({});
 
-  const updEstoque = (id: string, delta: number) =>
-    setProds(ps => ps.map(p => p.id === id ? { ...p, estoque: Math.max(0, (p.estoque ?? 0) + delta) } : p));
-
   const salvarEstoques = () => {
     setProds(ps => ps.map(p => {
       const v = edits[p.id];
@@ -173,7 +170,7 @@ export function Postagens({ ctx }: Props) {
         <>
           <div className="post-section-title">Postados recentemente</div>
           {postados.map((p, i) => (
-            <PostRow key={p.id} p={p} i={i} compartilhando={compartilhando} onPost={postarStatus} onEst={updEstoque} />
+            <PostRow key={p.id} p={p} i={i} compartilhando={compartilhando} onPost={postarStatus} />
           ))}
         </>
       )}
@@ -185,7 +182,7 @@ export function Postagens({ ctx }: Props) {
             <span className="post-badge-pending">{aguardando.length}</span>
           </div>
           {aguardando.map((p, i) => (
-            <PostRow key={p.id} p={p} i={i} compartilhando={compartilhando} onPost={postarStatus} onEst={updEstoque} />
+            <PostRow key={p.id} p={p} i={i} compartilhando={compartilhando} onPost={postarStatus} />
           ))}
         </>
       )}
@@ -193,13 +190,11 @@ export function Postagens({ ctx }: Props) {
   );
 }
 
-function PostRow({ p, i, compartilhando, onPost, onEst }: {
+function PostRow({ p, i, compartilhando, onPost }: {
   p: Produto; i: number;
   compartilhando: string | null;
   onPost: (p: Produto) => void;
-  onEst: (id: string, delta: number) => void;
 }) {
-  const est = p.estoque ?? 0;
   const isLoading = compartilhando === p.id;
   return (
     <motion.div
@@ -231,11 +226,6 @@ function PostRow({ p, i, compartilhando, onPost, onEst }: {
 
       <div className="post-row-right">
         <div className="post-row-price">{fmtR$(p.preco)}</div>
-        <div className="cat-row-est">
-          <button className="cat-est-btn" onClick={() => onEst(p.id, -1)}>−</button>
-          <span className={`cat-est-num${est === 0 ? ' zero' : ''}`}>{est}</span>
-          <button className="cat-est-btn" onClick={() => onEst(p.id, 1)}>+</button>
-        </div>
         <motion.button
           className={`cat-row-share post-share-btn${isLoading ? ' loading' : ''}`}
           onClick={() => onPost(p)}
