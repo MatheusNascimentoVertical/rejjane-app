@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fmtR$ } from '../lib/helpers';
 import { gerarImagemStatus } from '../lib/statusImage';
@@ -160,23 +161,26 @@ export function Postagens({ ctx }: Props) {
   return (
     <div className={`postagens${modoSelecao ? ' selecao-ativa' : ''}`}>
 
-      {/* Overlay de geração */}
-      <AnimatePresence>
-        {gerando && (
-          <motion.div className="post-gerando-overlay"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="post-gerando-card">
-              <div className="post-gerando-title">Gerando imagens…</div>
-              <div className="post-gerando-count">{gerando.atual} / {gerando.total}</div>
-              <div className="post-gerando-track">
-                <motion.div className="post-gerando-fill"
-                  animate={{ width: `${(gerando.atual / gerando.total) * 100}%` }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 20 }} />
+      {/* Overlay de geração — portal para escapar do transform do page-transition */}
+      {createPortal(
+        <AnimatePresence>
+          {gerando && (
+            <motion.div className="post-gerando-overlay"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="post-gerando-card">
+                <div className="post-gerando-title">Gerando imagens…</div>
+                <div className="post-gerando-count">{gerando.atual} / {gerando.total}</div>
+                <div className="post-gerando-track">
+                  <motion.div className="post-gerando-fill"
+                    animate={{ width: `${(gerando.atual / gerando.total) * 100}%` }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 20 }} />
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Header */}
       <div className="cat-header">
@@ -282,35 +286,38 @@ export function Postagens({ ctx }: Props) {
         </>
       )}
 
-      {/* Barra flutuante de lote */}
-      <AnimatePresence>
-        {modoSelecao && selecionados.size > 0 && (
-          <motion.div className="post-lote-bar"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
-            <div className="post-lote-info">
-              <span className="post-lote-count">{selecionados.size}</span>
-              <span className="post-lote-lbl">
-                produto{selecionados.size > 1 ? 's' : ''} selecionado{selecionados.size > 1 ? 's' : ''}
-              </span>
-            </div>
-            <motion.button
-              className="post-lote-btn"
-              whileTap={{ scale: 0.95 }}
-              onClick={compartilharLote}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
-                <polyline points="16 6 12 2 8 6"/>
-                <line x1="12" y1="2" x2="12" y2="15"/>
-              </svg>
-              Compartilhar {selecionados.size}
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Barra flutuante de lote — portal para escapar do transform do page-transition */}
+      {createPortal(
+        <AnimatePresence>
+          {modoSelecao && selecionados.size > 0 && (
+            <motion.div className="post-lote-bar"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
+              <div className="post-lote-info">
+                <span className="post-lote-count">{selecionados.size}</span>
+                <span className="post-lote-lbl">
+                  produto{selecionados.size > 1 ? 's' : ''} selecionado{selecionados.size > 1 ? 's' : ''}
+                </span>
+              </div>
+              <motion.button
+                className="post-lote-btn"
+                whileTap={{ scale: 0.95 }}
+                onClick={compartilharLote}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                Compartilhar {selecionados.size}
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
