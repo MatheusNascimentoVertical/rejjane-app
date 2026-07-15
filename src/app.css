@@ -1407,6 +1407,78 @@ body {
 .post-bulk-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 .post-bulk-input:focus { outline: none; border-color: var(--rose); }
 
+/* Selecionar button */
+.post-sel-btn { display: flex; align-items: center; gap: 6px; }
+
+/* Selection mode container — adds bottom padding so bar doesn't overlap last row */
+.selecao-ativa { padding-bottom: 90px; }
+
+/* Selected row highlight */
+.post-row-sel {
+  border-color: var(--rose) !important;
+  background: var(--rose-pale) !important;
+}
+
+/* Checkbox circle */
+.post-row-checkbox {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--line-2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.post-row-checkbox.checked {
+  background: var(--rose); border-color: var(--rose);
+}
+
+/* Floating lote bar */
+.post-lote-bar {
+  position: fixed; bottom: calc(var(--bn-h, 64px) + 12px); left: 16px; right: 16px;
+  background: var(--ink); color: #fff;
+  border-radius: 18px; padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  z-index: 200;
+}
+.post-lote-info { display: flex; align-items: center; gap: 8px; }
+.post-lote-count {
+  font-size: 22px; font-weight: 800; color: #fff; line-height: 1;
+}
+.post-lote-lbl {
+  font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 500;
+}
+.post-lote-btn {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--rose); color: #fff;
+  border: none; border-radius: 12px; padding: 10px 16px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+}
+.post-lote-btn:active { filter: brightness(0.9); }
+
+/* Generation progress overlay */
+.post-gerando-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500;
+}
+.post-gerando-card {
+  background: #fff; border-radius: 20px; padding: 32px 36px;
+  min-width: 260px; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+.post-gerando-title {
+  font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 8px;
+}
+.post-gerando-count {
+  font-size: 13px; color: var(--ink-mute); margin-bottom: 18px;
+}
+.post-gerando-track {
+  height: 8px; background: var(--cream-2); border-radius: 100px; overflow: hidden;
+}
+.post-gerando-fill {
+  height: 100%; background: var(--rose); border-radius: 100px;
+}
+
 @media (max-width: 540px) {
   .post-summary { gap: 8px; }
   .post-chip { padding: 12px 6px; }
