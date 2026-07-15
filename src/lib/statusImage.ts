@@ -82,8 +82,8 @@ export async function gerarImagemStatus(prod: Produto, cfg: Config): Promise<Blo
       const img = new Image(); img.crossOrigin = 'anonymous';
       await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); img.src = prod.fotoUrl!; });
       c.save(); rr(c, IPAD, IY, IS, IS, 48); c.clip();
-      // Contain: produto inteiro sempre visível, independente do tamanho da foto
-      const sc = Math.min(IS / img.width, IS / img.height);
+      // Cover: preenche o card inteiro sem margens brancas, corta o excesso
+      const sc = Math.max(IS / img.width, IS / img.height);
       const dw = img.width * sc, dh = img.height * sc;
       c.drawImage(img, IPAD + (IS - dw) / 2, IY + (IS - dh) / 2, dw, dh);
       c.restore();
