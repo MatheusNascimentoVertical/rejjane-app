@@ -4,6 +4,8 @@ export type PedStatus = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 
 export type MsgKey = 'orcamento' | 'confirmado' | 'encomendado' | 'chegou' | 'entregue' | 'cobranca';
 export type Pagamento = 'pix' | 'credito' | 'dinheiro';
 
+export type KitItem = { prodId: string; qtd: number };
+
 export type Produto = {
   id: string;
   nome: string;
@@ -18,6 +20,7 @@ export type Produto = {
   ativo: boolean;
   destaque?: boolean;
   ultimoStatus?: number;
+  componentes?: KitItem[];
 };
 
 export type Cliente = {

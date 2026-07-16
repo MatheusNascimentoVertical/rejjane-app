@@ -2,11 +2,14 @@ import { useState, useRef } from 'react';
 import { uploadFoto } from '../lib/cloudinary';
 import { Sheet, Field } from './Sheet';
 import { MARCAS } from '../data/constants';
-import type { AppCtx, Produto } from '../types';
+import type { AppCtx, Produto, KitItem } from '../types';
 
 type Props = { dados?: Partial<Produto>; ctx: AppCtx; onClose: () => void };
 
 const CATS_DEFAULT = ['Beleza', 'Casa', 'Cuidado', 'Conforto'];
+
+const norm = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export function MCatalogo({ dados, ctx, onClose }: Props) {
   const { prods, setProds } = ctx;
@@ -14,26 +17,32 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
 
   const existCats = Array.from(new Set([...CATS_DEFAULT, ...prods.map(p => p.cat)]));
 
-  const [nome,     setNome]     = useState(dados?.nome     ?? '');
-  const [marca,    setMarca]    = useState(dados?.marca    ?? MARCAS[0].id);
-  const [cat,      setCat]      = useState(dados?.cat      ?? existCats[0]);
-  const [catCustom, setCatCustom] = useState('');
-  const [preco,    setPreco]    = useState(String(dados?.preco    ?? ''));
-  const [precoDe,  setPrecoDe]  = useState(String(dados?.precoDe ?? ''));
-  const [estoque,  setEstoque]  = useState(String(dados?.estoque  ?? '0'));
-  const [desc,     setDesc]     = useState(dados?.descricao ?? '');
-  const [icon,     setIcon]     = useState(dados?.icon      ?? '🎁');
-  const [destaque, setDestaque] = useState(dados?.destaque  ?? false);
-  const [ativo,    setAtivo]    = useState(dados?.ativo     ?? true);
-  const [fotoUrl,  setFotoUrl]  = useState(dados?.fotoUrl   ?? '');
-  const [fotoFile, setFotoFile] = useState<File | null>(null);
-  const [fotoPreview, setFotoPreview] = useState(dados?.fotoUrl ?? '');
-  const [saving,   setSaving]   = useState(false);
+  const [nome,       setNome]       = useState(dados?.nome      ?? '');
+  const [marca,      setMarca]      = useState(dados?.marca     ?? MARCAS[0].id);
+  const [cat,        setCat]        = useState(dados?.cat       ?? existCats[0]);
+  const [catCustom,  setCatCustom]  = useState('');
+  const [preco,      setPreco]      = useState(String(dados?.preco   ?? ''));
+  const [precoDe,    setPrecoDe]    = useState(String(dados?.precoDe ?? ''));
+  const [estoque,    setEstoque]    = useState(String(dados?.estoque ?? '0'));
+  const [desc,       setDesc]       = useState(dados?.descricao  ?? '');
+  const [icon,       setIcon]       = useState(dados?.icon       ?? '🎁');
+  const [destaque,   setDestaque]   = useState(dados?.destaque   ?? false);
+  const [ativo,      setAtivo]      = useState(dados?.ativo      ?? true);
+  const [fotoUrl,    setFotoUrl]    = useState(dados?.fotoUrl    ?? '');
+  const [fotoFile,   setFotoFile]   = useState<File | null>(null);
+  const [fotoPreview,setFotoPreview]= useState(dados?.fotoUrl    ?? '');
+  const [saving,     setSaving]     = useState(false);
   const [uploadando, setUploadando] = useState(false);
-  const [erro,     setErro]     = useState('');
+  const [erro,       setErro]       = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
+  // Kit
+  const [isKit,        setIsKit]      = useState(Boolean(dados?.componentes?.length));
+  const [componentes,  setComponentes]= useState<KitItem[]>(dados?.componentes ?? []);
+  const [compSel,      setCompSel]    = useState('');
+  const [compQtd,      setCompQtd]    = useState('1');
+
+  const fileRef = useRef<HTMLInputElement>(null);
   const catFinal = cat === '__custom__' ? catCustom : cat;
 
   const handleFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,10 +52,32 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
     setFotoPreview(URL.createObjectURL(f));
   };
 
+  const addComp = () => {
+    if (!compSel) return;
+    const qtd = Math.max(1, parseInt(compQtd) || 1);
+    setComponentes(cs => {
+      const idx = cs.findIndex(c => c.prodId === compSel);
+      if (idx >= 0) {
+        const next = [...cs];
+        next[idx] = { ...next[idx], qtd: next[idx].qtd + qtd };
+        return next;
+      }
+      return [...cs, { prodId: compSel, qtd }];
+    });
+    setCompSel('');
+    setCompQtd('1');
+  };
+
+  const removeComp = (prodId: string) =>
+    setComponentes(cs => cs.filter(c => c.prodId !== prodId));
+
+  const updateCompQtd = (prodId: string, qtd: number) =>
+    setComponentes(cs => cs.map(c => c.prodId === prodId ? { ...c, qtd: Math.max(1, qtd) } : c));
+
   const salvar = async () => {
     if (!nome.trim()) { setErro('Informe o nome do produto.'); return; }
-    setSaving(true);
-    setErro('');
+    if (isKit && componentes.length === 0) { setErro('Adicione ao menos um produto ao kit.'); return; }
+    setSaving(true); setErro('');
     try {
       const id = dados?.id || `prod_${Date.now()}`;
       let finalFotoUrl = fotoUrl;
@@ -57,19 +88,15 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
           finalFotoUrl = await uploadFoto(fotoFile);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          if (msg.includes('VITE_CLOUDINARY')) {
+          if (msg.includes('VITE_CLOUDINARY'))
             setErro('Configuração de imagem ausente. Salve sem foto por enquanto e contate o suporte.');
-          } else if (msg.includes('400') || msg.includes('401')) {
+          else if (msg.includes('400') || msg.includes('401'))
             setErro('Preset de upload inválido no Cloudinary. Verifique as configurações.');
-          } else {
+          else
             setErro(`Foto não enviada: ${msg}. Verifique sua conexão ou salve sem foto.`);
-          }
-          setSaving(false);
-          setUploadando(false);
-          return; // mantém o modal aberto para a usuária ver o erro
-        } finally {
-          setUploadando(false);
-        }
+          setSaving(false); setUploadando(false);
+          return;
+        } finally { setUploadando(false); }
       }
 
       const prod: Produto = {
@@ -85,6 +112,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
         ...(finalFotoUrl ? { fotoUrl: finalFotoUrl } : {}),
         ativo,
         destaque,
+        ...(isKit && componentes.length ? { componentes } : {}),
       };
 
       if (isEdit) {
@@ -96,8 +124,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
     } catch (e) {
       setErro(`Erro ao salvar: ${e instanceof Error ? e.message : 'tente novamente.'}`);
     } finally {
-      setSaving(false);
-      setUploadando(false);
+      setSaving(false); setUploadando(false);
     }
   };
 
@@ -106,6 +133,13 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
     setProds(ps => ps.filter(p => p.id !== dados.id));
     onClose();
   };
+
+  // Produtos disponíveis para adicionar ao kit (exclui o próprio produto e kits)
+  const prodsDisponiveis = prods.filter(p =>
+    p.id !== dados?.id &&
+    !p.componentes?.length &&
+    !componentes.find(c => c.prodId === p.id)
+  );
 
   return (
     <Sheet title={isEdit ? 'Editar produto' : 'Novo produto'} subtitle="Catálogo" onClose={onClose} wide>
@@ -133,7 +167,7 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
 
       <div className="form-grid">
         <Field label="Nome">
-          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Perfume Lily Flower" />
+          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Kit Coffee Woman Duo" />
         </Field>
         <Field label="Marca">
           <select value={marca} onChange={e => setMarca(e.target.value)}>
@@ -190,7 +224,73 @@ export function MCatalogo({ dados, ctx, onClose }: Props) {
           </div>
           <span>Ativo</span>
         </div>
+        <div className="toggle-switch" onClick={() => { setIsKit(s => !s); if (isKit) setComponentes([]); }}>
+          <div className={`toggle-track${isKit ? ' on' : ''}`}>
+            <div className="toggle-thumb" />
+          </div>
+          <span>É um kit</span>
+        </div>
       </div>
+
+      {/* Editor de componentes do kit */}
+      {isKit && (
+        <div className="cat-comp-editor">
+          <div className="cat-comp-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+            Produtos do kit
+          </div>
+
+          {componentes.length > 0 && (
+            <div className="cat-comp-list">
+              {componentes.map(comp => {
+                const cp = prods.find(x => x.id === comp.prodId);
+                return (
+                  <div key={comp.prodId} className="cat-comp-row">
+                    <div className="cat-comp-thumb">
+                      {cp?.fotoUrl ? <img src={cp.fotoUrl} alt={cp.nome} /> : <span>{cp?.icon ?? '📦'}</span>}
+                    </div>
+                    <div className="cat-comp-nome">
+                      <span>{cp?.nome ?? comp.prodId}</span>
+                      <span className="cat-comp-marca">{cp?.marca}</span>
+                    </div>
+                    <div className="cat-comp-qtd-wrap">
+                      <button className="cat-est-btn" onClick={() => updateCompQtd(comp.prodId, comp.qtd - 1)}>−</button>
+                      <span className="cat-comp-qtd">{comp.qtd}x</span>
+                      <button className="cat-est-btn" onClick={() => updateCompQtd(comp.prodId, comp.qtd + 1)}>+</button>
+                    </div>
+                    <button className="cat-comp-del" onClick={() => removeComp(comp.prodId)} title="Remover">×</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="cat-comp-add-row">
+            <select
+              className="cat-comp-sel"
+              value={compSel}
+              onChange={e => setCompSel(e.target.value)}
+            >
+              <option value="">Selecionar produto…</option>
+              {prodsDisponiveis
+                .sort((a, b) => norm(a.nome).localeCompare(norm(b.nome)))
+                .map(p => (
+                  <option key={p.id} value={p.id}>{p.nome} — {p.marca}</option>
+                ))
+              }
+            </select>
+            <input
+              type="number" min="1" value={compQtd}
+              onChange={e => setCompQtd(e.target.value)}
+              className="cat-comp-qtd-input"
+              placeholder="Qtd"
+            />
+            <button className="btn-soft-sm cat-comp-add-btn" onClick={addComp} disabled={!compSel}>
+              + Add
+            </button>
+          </div>
+        </div>
+      )}
 
       {erro && (
         <div style={{ fontSize: 12, color: '#b85050', background: 'rgba(217,64,64,0.07)', border: '1px solid rgba(217,64,64,0.2)', borderRadius: 10, padding: '8px 12px', marginTop: 12 }}>
