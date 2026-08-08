@@ -9,23 +9,39 @@ import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Client
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
-function ProdSelector({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
-  const marcas = Array.from(new Set(prodList.map(p => p.marca)));
+function ProdSelector({ prodId, prodList, onSelect }: {
+  prodId: string;
+  prodList: Prod[];
+  onSelect: (id: string, preco: number) => void;
+}) {
+  const marcas = Array.from(new Set(prodList.map(p => p.marca))).sort();
+  const [marcaFiltro, setMarcaFiltro] = useState(
+    () => prodList.find(p => p.id === prodId)?.marca ?? ''
+  );
+
+  const prodsVisiveis = marcaFiltro
+    ? prodList.filter(p => p.marca === marcaFiltro)
+    : prodList;
+
+  const handleProd = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    const found = prodsVisiveis.find(x => x.id === id);
+    onSelect(id, found?.preco ?? 0);
+  };
+
   return (
-    <select
-      className="ped-prod-sel"
-      value={prodId}
-      onChange={e => onSelect(e.target.value)}
-    >
-      <option value="">Toque para escolher o produto…</option>
-      {marcas.map(marca => (
-        <optgroup key={marca} label={`── ${marca}`}>
-          {prodList.filter(p => p.marca === marca).map(p => (
-            <option key={p.id} value={p.id}>{p.nome} — R$ {p.preco.toFixed(2)}</option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
+    <div className="ped-prod-selector">
+      <select className="ped-prod-marca-sel" value={marcaFiltro} onChange={e => setMarcaFiltro(e.target.value)}>
+        <option value="">Todas as marcas</option>
+        {marcas.map(m => <option key={m} value={m}>{m}</option>)}
+      </select>
+      <select className="ped-prod-item-sel" value={prodId} onChange={handleProd}>
+        <option value="">Escolher produto…</option>
+        {prodsVisiveis.map(p => (
+          <option key={p.id} value={p.id}>{p.nome} — R$ {p.preco.toFixed(2)}</option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -154,7 +170,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
                 <ProdSelector
                   prodId={item.prodId}
                   prodList={prodList}
-                  onSelect={id => setProdItem(i, id)}
+                  onSelect={(id, preco) => updItem(i, { prodId: id, vUnit: preco })}
                 />
               </div>
               <div className="ped-item-bottom">

@@ -932,11 +932,19 @@ body {
 .ped-item-select { flex: 1; min-width: 0; border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); outline: none; cursor: pointer; }
 .ped-item-del { display: none; }
 
-/* Seletor nativo de produto */
-.ped-prod-sel {
-  flex: 1; width: 100%; padding: 9px 12px;
-  border: 1.5px solid var(--line-2); border-radius: 10px;
+/* Seletor de produto em dois passos (marca → produto) */
+.ped-prod-selector { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.ped-prod-marca-sel {
+  width: 100%; padding: 7px 10px;
+  border: 1.5px solid var(--line-2); border-radius: 8px;
   background: var(--cream-2); font-family: inherit;
+  font-size: 12px; font-weight: 700; color: var(--ink-soft);
+  appearance: auto; cursor: pointer;
+}
+.ped-prod-item-sel {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--rose-l); border-radius: 10px;
+  background: var(--cream); font-family: inherit;
   font-size: 13px; font-weight: 600; color: var(--ink);
   appearance: auto; cursor: pointer;
 }
