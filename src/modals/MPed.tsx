@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
 import { PRODS, ST } from '../data/constants';
@@ -62,82 +62,63 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </button>
 
-      {createPortal(
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              className="prod-picker-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              onPointerDown={fechar}
-            >
-              <motion.div
-                className="prod-picker-sheet"
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-                onPointerDown={e => e.stopPropagation()}
-              >
-                <div className="prod-picker-header">
-                  <span>Escolher produto</span>
-                  <button type="button" className="prod-picker-close" onClick={fechar}>×</button>
-                </div>
-                <div className="prod-picker-search-wrap">
-                  <input
-                    ref={inputRef}
-                    className="prod-picker-q"
-                    placeholder="Buscar por nome, marca ou categoria…"
-                    value={q}
-                    onChange={e => setQ(e.target.value)}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="prod-picker-chips">
-                  {marcasFiltro.map(m => (
-                    <button
-                      key={m}
-                      type="button"
-                      className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
-                      onPointerDown={e => e.stopPropagation()}
-                      onClick={() => setMarcaFiltro(m)}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-                <div className="prod-picker-results">
-                  {filtered.length === 0
-                    ? <div className="prod-search-empty">Nenhum produto encontrado</div>
-                    : filtered.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={`prod-picker-item${p.id === prodId ? ' selected' : ''}`}
-                        onPointerDown={e => e.stopPropagation()}
-                        onClick={() => select(p.id)}
-                      >
-                        <span className="prod-search-thumb">
-                          {p.fotoUrl ? <img src={p.fotoUrl} alt={p.nome} /> : <span>{p.icon}</span>}
-                        </span>
-                        <span className="prod-search-info">
-                          <span className="prod-search-nome">{p.nome}</span>
-                          <span className="prod-search-marca">{p.marca} · {p.cat}</span>
-                        </span>
-                        <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-                      </button>
-                    ))
-                  }
-                </div>
-                <div className="prod-picker-count">
-                  {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
+      {open && createPortal(
+        <div className="prod-picker-wrap">
+          <div className="prod-picker-backdrop" onClick={fechar} />
+          <div className="prod-picker-sheet">
+            <div className="prod-picker-header">
+              <span>Escolher produto</span>
+              <button type="button" className="prod-picker-close" onClick={fechar}>×</button>
+            </div>
+            <div className="prod-picker-search-wrap">
+              <input
+                ref={inputRef}
+                className="prod-picker-q"
+                placeholder="Buscar por nome, marca ou categoria…"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="prod-picker-chips">
+              {marcasFiltro.map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
+                  onClick={() => setMarcaFiltro(m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <div className="prod-picker-results">
+              {filtered.length === 0
+                ? <div className="prod-search-empty">Nenhum produto encontrado</div>
+                : filtered.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`prod-picker-item${p.id === prodId ? ' selected' : ''}`}
+                    onClick={() => select(p.id)}
+                  >
+                    <span className="prod-search-thumb">
+                      {p.fotoUrl ? <img src={p.fotoUrl} alt={p.nome} /> : <span>{p.icon}</span>}
+                    </span>
+                    <span className="prod-search-info">
+                      <span className="prod-search-nome">{p.nome}</span>
+                      <span className="prod-search-marca">{p.marca} · {p.cat}</span>
+                    </span>
+                    <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+                  </button>
+                ))
+              }
+            </div>
+            <div className="prod-picker-count">
+              {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+        </div>,
         document.body
       )}
     </>
