@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
 import { PRODS, ST } from '../data/constants';
@@ -21,7 +22,6 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const qNorm = norm(q.trim());
 
-  // Marcas que realmente existem na lista (evita chips inúteis)
   const marcasPresentes = new Set(prodList.map(p => p.marca));
   const marcasFiltro = MARCAS_FILTRO.filter(m => m === 'Todos' || marcasPresentes.has(m));
 
@@ -33,29 +33,24 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
       norm(p.cat).includes(qNorm)
     );
 
-  const select = (id: string) => {
-    onSelect(id);
-    setOpen(false);
-    setQ('');
-    setMarcaFiltro('Todos');
-  };
-
   const abrir = () => {
     setOpen(true);
     setQ('');
     setMarcaFiltro('Todos');
-    setTimeout(() => inputRef.current?.focus(), 60);
+    setTimeout(() => inputRef.current?.focus(), 150);
   };
 
-  if (!open) {
-    return (
+  const fechar = () => { setOpen(false); setQ(''); setMarcaFiltro('Todos'); };
+
+  const select = (id: string) => { onSelect(id); fechar(); };
+
+  return (
+    <>
       <button type="button" className={`prod-trigger${!atual ? ' vazio' : ''}`} onClick={abrir}>
         {atual
           ? <>
               <span className="prod-trigger-thumb">
-                {atual.fotoUrl
-                  ? <img src={atual.fotoUrl} alt={atual.nome} />
-                  : <span>{atual.icon}</span>}
+                {atual.fotoUrl ? <img src={atual.fotoUrl} alt={atual.nome} /> : <span>{atual.icon}</span>}
               </span>
               <span className="prod-trigger-info">
                 <span className="prod-trigger-nome">{atual.nome}</span>
@@ -66,62 +61,86 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
         }
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </button>
-    );
-  }
 
-  return (
-    <div className="prod-search-panel">
-      <input
-        ref={inputRef}
-        className="prod-search-q"
-        placeholder="Buscar por nome, marca ou categoria…"
-        value={q}
-        onChange={e => setQ(e.target.value)}
-        autoComplete="off"
-      />
-
-      {/* Chips de marca */}
-      <div className="prod-search-marcas">
-        {marcasFiltro.map(m => (
-          <button
-            key={m}
-            type="button"
-            className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
-            onClick={() => setMarcaFiltro(m)}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
-
-      <div className="prod-search-results">
-        {filtered.length === 0
-          ? <div className="prod-search-empty">Nenhum produto encontrado</div>
-          : filtered.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-              onClick={() => select(p.id)}
+      {createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              className="prod-picker-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onPointerDown={fechar}
             >
-              <span className="prod-search-thumb">
-                {p.fotoUrl
-                  ? <img src={p.fotoUrl} alt={p.nome} />
-                  : <span>{p.icon}</span>}
-              </span>
-              <span className="prod-search-info">
-                <span className="prod-search-nome">{p.nome}</span>
-                <span className="prod-search-marca">{p.marca} · {p.cat}</span>
-              </span>
-              <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-            </button>
-          ))
-        }
-      </div>
-      <div className="prod-search-count">
-        {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
-      </div>
-    </div>
+              <motion.div
+                className="prod-picker-sheet"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+                onPointerDown={e => e.stopPropagation()}
+              >
+                <div className="prod-picker-header">
+                  <span>Escolher produto</span>
+                  <button type="button" className="prod-picker-close" onClick={fechar}>×</button>
+                </div>
+                <div className="prod-picker-search-wrap">
+                  <input
+                    ref={inputRef}
+                    className="prod-picker-q"
+                    placeholder="Buscar por nome, marca ou categoria…"
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="prod-picker-chips">
+                  {marcasFiltro.map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
+                      onPointerDown={e => e.stopPropagation()}
+                      onClick={() => setMarcaFiltro(m)}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <div className="prod-picker-results">
+                  {filtered.length === 0
+                    ? <div className="prod-search-empty">Nenhum produto encontrado</div>
+                    : filtered.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`prod-picker-item${p.id === prodId ? ' selected' : ''}`}
+                        onPointerDown={e => e.stopPropagation()}
+                        onClick={() => select(p.id)}
+                      >
+                        <span className="prod-search-thumb">
+                          {p.fotoUrl ? <img src={p.fotoUrl} alt={p.nome} /> : <span>{p.icon}</span>}
+                        </span>
+                        <span className="prod-search-info">
+                          <span className="prod-search-nome">{p.nome}</span>
+                          <span className="prod-search-marca">{p.marca} · {p.cat}</span>
+                        </span>
+                        <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+                      </button>
+                    ))
+                  }
+                </div>
+                <div className="prod-picker-count">
+                  {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 }
 
