@@ -1,5 +1,4 @@
-import { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Sheet, Field } from './Sheet';
 import { MCli } from './MCli';
@@ -10,118 +9,23 @@ import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Client
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
-const MARCAS_FILTRO = ['Todos', 'Boticário', 'Eudora', 'Natura', 'Avon', 'Tupperware'];
-
-function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [q, setQ] = useState('');
-  const [marcaFiltro, setMarcaFiltro] = useState('Todos');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const atual = prodId ? prodList.find(p => p.id === prodId) : null;
-
-  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const qNorm = norm(q.trim());
-
-  const marcasPresentes = new Set(prodList.map(p => p.marca));
-  const marcasFiltro = MARCAS_FILTRO.filter(m => m === 'Todos' || marcasPresentes.has(m));
-
-  const filtered = prodList
-    .filter(p => marcaFiltro === 'Todos' || norm(p.marca) === norm(marcaFiltro))
-    .filter(p => !qNorm ||
-      norm(p.nome).includes(qNorm) ||
-      norm(p.marca).includes(qNorm) ||
-      norm(p.cat).includes(qNorm)
-    );
-
-  const abrir = () => {
-    setOpen(true);
-    setQ('');
-    setMarcaFiltro('Todos');
-    setTimeout(() => inputRef.current?.focus(), 150);
-  };
-
-  const fechar = () => { setOpen(false); setQ(''); setMarcaFiltro('Todos'); };
-
-  const select = (id: string) => { onSelect(id); fechar(); };
-
+function ProdSelector({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
+  const marcas = Array.from(new Set(prodList.map(p => p.marca)));
   return (
-    <>
-      <button type="button" className={`prod-trigger${!atual ? ' vazio' : ''}`} onClick={abrir}>
-        {atual
-          ? <>
-              <span className="prod-trigger-thumb">
-                {atual.fotoUrl ? <img src={atual.fotoUrl} alt={atual.nome} /> : <span>{atual.icon}</span>}
-              </span>
-              <span className="prod-trigger-info">
-                <span className="prod-trigger-nome">{atual.nome}</span>
-                <span className="prod-trigger-marca">{atual.marca}</span>
-              </span>
-            </>
-          : <span className="prod-trigger-placeholder">Toque para escolher o produto…</span>
-        }
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-
-      {open && createPortal(
-        <div className="prod-picker-wrap">
-          <div className="prod-picker-backdrop" onClick={fechar} />
-          <div className="prod-picker-sheet">
-            <div className="prod-picker-header">
-              <span>Escolher produto</span>
-              <button type="button" className="prod-picker-close" onClick={fechar}>×</button>
-            </div>
-            <div className="prod-picker-search-wrap">
-              <input
-                ref={inputRef}
-                className="prod-picker-q"
-                placeholder="Buscar por nome, marca ou categoria…"
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <div className="prod-picker-chips">
-              {marcasFiltro.map(m => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
-                  onClick={() => setMarcaFiltro(m)}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-            <div className="prod-picker-results">
-              {filtered.length === 0
-                ? <div className="prod-search-empty">Nenhum produto encontrado</div>
-                : filtered.map(p => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={`prod-picker-item${p.id === prodId ? ' selected' : ''}`}
-                    onClick={() => select(p.id)}
-                  >
-                    <span className="prod-search-thumb">
-                      {p.fotoUrl ? <img src={p.fotoUrl} alt={p.nome} /> : <span>{p.icon}</span>}
-                    </span>
-                    <span className="prod-search-info">
-                      <span className="prod-search-nome">{p.nome}</span>
-                      <span className="prod-search-marca">{p.marca} · {p.cat}</span>
-                    </span>
-                    <span className="prod-search-preco">{fmtR$(p.preco)}</span>
-                  </button>
-                ))
-              }
-            </div>
-            <div className="prod-picker-count">
-              {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
+    <select
+      className="ped-prod-sel"
+      value={prodId}
+      onChange={e => onSelect(e.target.value)}
+    >
+      <option value="">Toque para escolher o produto…</option>
+      {marcas.map(marca => (
+        <optgroup key={marca} label={`── ${marca}`}>
+          {prodList.filter(p => p.marca === marca).map(p => (
+            <option key={p.id} value={p.id}>{p.nome} — R$ {p.preco.toFixed(2)}</option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 
@@ -247,7 +151,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
               <button className="ped-item-del-abs" onClick={() => removeItem(i)} title="Remover produto">✕</button>
               <div className="ped-item-top">
                 <span className="ped-item-icon">{prodAtual?.icon ?? '📦'}</span>
-                <ProdSearch
+                <ProdSelector
                   prodId={item.prodId}
                   prodList={prodList}
                   onSelect={id => setProdItem(i, id)}
