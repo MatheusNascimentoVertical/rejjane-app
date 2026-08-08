@@ -9,34 +9,61 @@ import type { AppCtx, PedidoForm, PedItem, PedStatus, Pagamento, Parcela, Client
 
 type Props = { dados?: Partial<import('../types').Pedido>; ctx: AppCtx; onClose: () => void };
 
+const MARCAS_FILTRO = ['Todos', 'Boticário', 'Eudora', 'Natura', 'Avon', 'Tupperware'];
+
 function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: Prod[]; onSelect: (id: string) => void }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [marcaFiltro, setMarcaFiltro] = useState('Todos');
   const inputRef = useRef<HTMLInputElement>(null);
-  const atual = prodList.find(p => p.id === prodId);
+  const atual = prodId ? prodList.find(p => p.id === prodId) : null;
 
-  const filtered = q.trim()
-    ? prodList.filter(p =>
-        p.nome.toLowerCase().includes(q.toLowerCase()) ||
-        p.marca.toLowerCase().includes(q.toLowerCase()) ||
-        p.cat.toLowerCase().includes(q.toLowerCase())
-      )
-    : prodList;
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const qNorm = norm(q.trim());
+
+  // Marcas que realmente existem na lista (evita chips inúteis)
+  const marcasPresentes = new Set(prodList.map(p => p.marca));
+  const marcasFiltro = MARCAS_FILTRO.filter(m => m === 'Todos' || marcasPresentes.has(m));
+
+  const filtered = prodList
+    .filter(p => marcaFiltro === 'Todos' || norm(p.marca) === norm(marcaFiltro))
+    .filter(p => !qNorm ||
+      norm(p.nome).includes(qNorm) ||
+      norm(p.marca).includes(qNorm) ||
+      norm(p.cat).includes(qNorm)
+    );
 
   const select = (id: string) => {
     onSelect(id);
     setOpen(false);
     setQ('');
+    setMarcaFiltro('Todos');
+  };
+
+  const abrir = () => {
+    setOpen(true);
+    setQ('');
+    setMarcaFiltro('Todos');
+    setTimeout(() => inputRef.current?.focus(), 60);
   };
 
   if (!open) {
     return (
-      <button
-        type="button"
-        className="prod-trigger"
-        onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 0); }}
-      >
-        <span className="prod-trigger-nome">{atual?.nome ?? 'Selecionar produto...'}</span>
+      <button type="button" className={`prod-trigger${!atual ? ' vazio' : ''}`} onClick={abrir}>
+        {atual
+          ? <>
+              <span className="prod-trigger-thumb">
+                {atual.fotoUrl
+                  ? <img src={atual.fotoUrl} alt={atual.nome} />
+                  : <span>{atual.icon}</span>}
+              </span>
+              <span className="prod-trigger-info">
+                <span className="prod-trigger-nome">{atual.nome}</span>
+                <span className="prod-trigger-marca">{atual.marca}</span>
+              </span>
+            </>
+          : <span className="prod-trigger-placeholder">Toque para escolher o produto…</span>
+        }
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </button>
     );
@@ -46,30 +73,53 @@ function ProdSearch({ prodId, prodList, onSelect }: { prodId: string; prodList: 
     <div className="prod-search-panel">
       <input
         ref={inputRef}
-        autoFocus
         className="prod-search-q"
-        placeholder="Buscar produto..."
+        placeholder="Buscar por nome, marca ou categoria…"
         value={q}
         onChange={e => setQ(e.target.value)}
         autoComplete="off"
       />
-      <div className="prod-search-results">
-        {filtered.length === 0 && <div className="prod-search-empty">Nenhum produto encontrado</div>}
-        {filtered.map(p => (
+
+      {/* Chips de marca */}
+      <div className="prod-search-marcas">
+        {marcasFiltro.map(m => (
           <button
-            key={p.id}
+            key={m}
             type="button"
-            className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
-            onClick={() => select(p.id)}
+            className={`prod-search-chip${marcaFiltro === m ? ' active' : ''}`}
+            onClick={() => setMarcaFiltro(m)}
           >
-            <span className="prod-search-icon">{p.icon}</span>
-            <span className="prod-search-info">
-              <span className="prod-search-nome">{p.nome}</span>
-              <span className="prod-search-marca">{p.marca}</span>
-            </span>
-            <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+            {m}
           </button>
         ))}
+      </div>
+
+      <div className="prod-search-results">
+        {filtered.length === 0
+          ? <div className="prod-search-empty">Nenhum produto encontrado</div>
+          : filtered.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className={`prod-search-item${p.id === prodId ? ' selected' : ''}`}
+              onClick={() => select(p.id)}
+            >
+              <span className="prod-search-thumb">
+                {p.fotoUrl
+                  ? <img src={p.fotoUrl} alt={p.nome} />
+                  : <span>{p.icon}</span>}
+              </span>
+              <span className="prod-search-info">
+                <span className="prod-search-nome">{p.nome}</span>
+                <span className="prod-search-marca">{p.marca} · {p.cat}</span>
+              </span>
+              <span className="prod-search-preco">{fmtR$(p.preco)}</span>
+            </button>
+          ))
+        }
+      </div>
+      <div className="prod-search-count">
+        {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
       </div>
     </div>
   );
@@ -85,7 +135,7 @@ export function MPed({ dados, ctx, onClose }: Props) {
   const { clis, salvarPed } = ctx;
   const prodList = ctx.prods.length > 0 ? ctx.prods : PRODS;
 
-  const defaultItem = (): PedItem => ({ prodId: prodList[0]?.id ?? '', qtd: 1, vUnit: prodList[0]?.preco ?? 0 });
+  const defaultItem = (): PedItem => ({ prodId: '', qtd: 1, vUnit: 0 });
 
   const [showNovaCli, setShowNovaCli] = useState(false);
   const [modoPgto, setModoPgto] = useState<'simples' | 'parcelado'>(
